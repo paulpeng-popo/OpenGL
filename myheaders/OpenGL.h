@@ -18,15 +18,19 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <assimp/scene.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
-#define deg2rad(x) ((x)*((3.1415926f)/(180.0f)))
-#define rad2deg(x) ((180.0f) / ((x)*(3.1415926f)))
+#define deg2rad(x) ((x) * ((3.1415926f) / (180.0f)))
+#define rad2deg(x) ((180.0f) / ((x) * (3.1415926f)))
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 GLenum glCheckError_(const char *file, int line);
-void error_callback(int error, const char* description);
+void error_callback(int error, const char *description);
+bool DoTheImportThing(const std::string &pFile);
 
 class OpenGL
 {

@@ -21,15 +21,16 @@ GLuint program;
 GLFWwindow *window;
 
 GLfloat vertices[] = {
-    0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-    0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+	0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	  // top right
+	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+	-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+	-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f	  // top left
 };
 
-GLuint indices[] = { // start from 0
+GLuint indices[] = {
+	// start from 0
 	0, 1, 3, // first triangle
-	1, 2, 3 // second triangle
+	1, 2, 3	 // second triangle
 };
 
 int width, height, nrChannels;
@@ -44,16 +45,14 @@ GLuint texture2;
 GLuint texture2Loc;
 
 // Constructors
-OpenGL::OpenGL() :
-	width(800), height(600), window_name("test")
+OpenGL::OpenGL() : width(800), height(600), window_name("test")
 {
 	fprintf(stdout, "[INFO] Using default settings ...\n");
 	fprintf(stdout, "[INFO] Window size: width = 800, height = 600\n");
 	fprintf(stdout, "[INFO] Window title: <test>\n");
 }
 
-OpenGL::OpenGL(int w, int h, std::string title) :
-	width(w), height(h), window_name(title)
+OpenGL::OpenGL(int w, int h, std::string title) : width(w), height(h), window_name(title)
 {
 	fprintf(stdout, "[INFO] Window size: width = %d, height = %d\n", w, h);
 	fprintf(stdout, "[INFO] Window title: <%s>\n", title.c_str());
@@ -74,10 +73,12 @@ OpenGL::~OpenGL()
 		height: Height after resizing
 	Return:		None
 */
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
-	if (width == 0) width = 1;
-	if (height == 0) height = 1;
+	if (width == 0)
+		width = 1;
+	if (height == 0)
+		height = 1;
 	glViewport(0, 0, width, height);
 }
 
@@ -90,8 +91,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 */
 void processInput(GLFWwindow *window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 }
 
 /*
@@ -114,11 +115,11 @@ int OpenGL::UseGLFW()
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	#ifdef __APPLE__
-    	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	#endif
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
 
 	window = glfwCreateWindow(width, height, window_name.c_str(), NULL, NULL);
 	if (window == NULL)
@@ -175,13 +176,13 @@ void OpenGL::InitDefault()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GL_FLOAT), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void *)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GL_FLOAT), (void*)(3*sizeof(GL_FLOAT)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void *)(3 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(GL_FLOAT), (void*)(6*sizeof(GL_FLOAT)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void *)(6 * sizeof(GL_FLOAT)));
 	glEnableVertexAttribArray(2);
 
 	std::cout << "[NOTE] Texture size should be power of 2" << std::endl;
@@ -265,13 +266,13 @@ void OpenGL::RenderLoop()
 	GLfloat timeValue;
 
 	while (!glfwWindowShouldClose(window))
-   	{
-        // input
-        processInput(window);
+	{
+		// input
+		processInput(window);
 
-        // render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+		// render
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		// get time value
 		timeValue = glfwGetTime();
@@ -294,41 +295,66 @@ void OpenGL::RenderLoop()
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		// refresh
-        glfwSwapBuffers(window); // swap buffers
-        glfwPollEvents(); // poll IO events (keys pressed/released, mouse moved etc.)
-    }
+		glfwSwapBuffers(window); // swap buffers
+		glfwPollEvents();		 // poll IO events (keys pressed/released, mouse moved etc.)
+	}
 
 	// release memory
 	glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    glDeleteProgram(program);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+	glDeleteProgram(program);
 
 	glfwDestroyWindow(window);
 }
 
-void error_callback(int error, const char* description)
+void error_callback(int error, const char *description)
 {
 	fprintf(stderr, "[Error] %s\n", description);
 }
 
 GLenum glCheckError_(const char *file, int line)
 {
-    GLenum errorCode;
-    while ((errorCode = glGetError()) != GL_NO_ERROR)
-    {
-        std::string error;
-        switch (errorCode)
-        {
-            case GL_INVALID_ENUM:                  error = "INVALID_ENUM"; break;
-            case GL_INVALID_VALUE:                 error = "INVALID_VALUE"; break;
-            case GL_INVALID_OPERATION:             error = "INVALID_OPERATION"; break;
-            case GL_STACK_OVERFLOW:                error = "STACK_OVERFLOW"; break;
-            case GL_STACK_UNDERFLOW:               error = "STACK_UNDERFLOW"; break;
-            case GL_OUT_OF_MEMORY:                 error = "OUT_OF_MEMORY"; break;
-            case GL_INVALID_FRAMEBUFFER_OPERATION: error = "INVALID_FRAMEBUFFER_OPERATION"; break;
-        }
+	GLenum errorCode;
+	while ((errorCode = glGetError()) != GL_NO_ERROR)
+	{
+		std::string error;
+		switch (errorCode)
+		{
+		case GL_INVALID_ENUM:
+			error = "INVALID_ENUM";
+			break;
+		case GL_INVALID_VALUE:
+			error = "INVALID_VALUE";
+			break;
+		case GL_INVALID_OPERATION:
+			error = "INVALID_OPERATION";
+			break;
+		case GL_STACK_OVERFLOW:
+			error = "STACK_OVERFLOW";
+			break;
+		case GL_STACK_UNDERFLOW:
+			error = "STACK_UNDERFLOW";
+			break;
+		case GL_OUT_OF_MEMORY:
+			error = "OUT_OF_MEMORY";
+			break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			error = "INVALID_FRAMEBUFFER_OPERATION";
+			break;
+		}
 		std::cerr << "[ERROR] " << error << " | " << file << " (" << line << ")" << std::endl;
-    }
-    return errorCode;
+	}
+	return errorCode;
+}
+
+bool DoTheImportThing(const std::string &pFile)
+{
+	// Create an instance of the Importer class
+	Assimp::Importer importer;
+	// And have it read the given file with some example postprocessing
+	// Usually - if speed is not the most important aspect for you - you'll
+	// propably to request more postprocessing than we do in this example.
+	const aiScene *scene = importer.ReadFile(pFile, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+	return true;
 }
