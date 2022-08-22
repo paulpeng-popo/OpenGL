@@ -60,6 +60,7 @@ public:
 	// glutInitFuncs
 	int UseGLFW();
 	int UseGLAD();
+	int UseIMGUI();
 	void InitDefault();
 	void DumpInfo();
 	void RenderLoop();

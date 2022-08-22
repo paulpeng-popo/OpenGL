@@ -10,6 +10,10 @@
 #include "myheaders/ModelLoader.h"
 #include "myheaders/Actions.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 std::string vs_path = ".\\src\\shaders\\vertex.glsl";
 std::string fs_path = ".\\src\\shaders\\fragment.glsl";
 std::string obj_path = ".\\src\\objects\\";
@@ -152,6 +156,26 @@ int OpenGL::UseGLAD()
 }
 
 /*
+	Function: Initialize IMGUI
+	Params:		None
+	Return:
+		-1:		Something failed
+		0:		IMGUI settings settled successfully
+*/
+int OpenGL::UseIMGUI()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO();
+	(void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 460");
+
+	return 0;
+}
+
+/*
 	Function: Set initial value for all stuff
 	Params:		None
 	Return:		None
@@ -218,6 +242,11 @@ void OpenGL::RenderLoop()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// IMGUI
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
 		// shader program
 		shader.use();
 
@@ -248,10 +277,26 @@ void OpenGL::RenderLoop()
 			shader.setMat4("model", model[i]);
 		}
 
+		// IMGUI
+		ImGui::Begin("Settings");
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Checkbox("Light Switch", &lightswitch);
+		// ImGui::Checkbox("Wireframe", &wireframe);
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		// refresh
 		glfwSwapBuffers(window); // swap buffers
 		glfwPollEvents();		 // poll IO events (keys pressed/released, mouse moved etc.)
 	}
+
+	// shut down IMGUI
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
 	shader.deleteProgram();
 	glfwDestroyWindow(window);
 }

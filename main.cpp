@@ -16,6 +16,7 @@ int main()
     OpenGL opengl = OpenGL(WIDTH, HEIGHT, title);
 	if (opengl.UseGLFW() == -1) exit(EXIT_FAILURE); // load GLFW
     if (opengl.UseGLAD() == -1) exit(EXIT_FAILURE); // load GLAD
+    if (opengl.UseIMGUI() == -1) exit(EXIT_FAILURE); // load IMGUI
     opengl.InitDefault(); // initialize basic buffers
     opengl.DumpInfo(); // show some useful version informations
     opengl.RenderLoop(); // render my window in while loop
