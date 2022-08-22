@@ -100,7 +100,7 @@ vector<mat4> walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3
     float time = glfwGetTime();
     float freq = 2.0f;
     float amp = 1.0f;
-    float offset = -90.0f;
+    float offset = -60.0f;
     float func = amp * cos(freq * (time + offset));
 
     // std::cout << func << std::endl;
