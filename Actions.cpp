@@ -88,10 +88,6 @@ vector<mat4> stand(vector<vec3> &translation, vector<vec3> &rotation, vector<vec
     translation[RIGHT_FOOT] = vec3(0.0f, -0.4f, -0.05f);
 
     translation[BODY] += glm::vec3(0.0f, 0.0f, -5.0f);
-    rotation[LEFT_UPPER_ARM] = vec3(60.0f, 0.0f, 0.0f);
-    rotation[RIGHT_UPPER_ARM] = vec3(-60.0f, 0.0f, 0.0f);
-    rotation[LEFT_UPPER_LEG] = vec3(30.0f, 0.0f, 0.0f);
-    rotation[RIGHT_UPPER_LEG] = vec3(-30.0f, 0.0f, 0.0f);
 
     vector<mat4> models = produceModel(translation, rotation, scalar);
     setConnect(models);
@@ -102,7 +98,10 @@ vector<mat4> stand(vector<vec3> &translation, vector<vec3> &rotation, vector<vec
 vector<mat4> walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
 {
     float time = glfwGetTime();
-    float func = -cos(time);
+    float freq = 2.0f;
+    float amp = 1.0f;
+    float offset = -90.0f;
+    float func = amp * cos(freq * (time + offset));
 
     // std::cout << func << std::endl;
 
