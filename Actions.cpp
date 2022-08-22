@@ -7,7 +7,23 @@
 
 #include "myheaders/Actions.h"
 
-void initial(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
+vector<mat4> produceModel(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
+{
+    vector<mat4> model(BODY_PARTS, mat4(1.0f));
+
+    for (int i = 0; i < BODY_PARTS; i++)
+    {
+        model[i] = glm::translate(model[i], translation[i]);
+        model[i] = glm::rotate(model[i], glm::radians(rotation[i].x), vec3(1.0f, 0.0f, 0.0f));
+        model[i] = glm::rotate(model[i], glm::radians(rotation[i].y), vec3(0.0f, 1.0f, 0.0f));
+        model[i] = glm::rotate(model[i], glm::radians(rotation[i].z), vec3(0.0f, 0.0f, 1.0f));
+        model[i] = glm::scale(model[i], scalar[i]);
+    }
+
+    return model;
+}
+
+vector<mat4> initial(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
 {
     for (int i = 0; i < BODY_PARTS; i++)
     {
@@ -15,67 +31,95 @@ void initial(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &sc
         rotation[i] = glm::vec3(0.0f);
         scalar[i] = glm::vec3(1.0f);
     }
+
+    return produceModel(translation, rotation, scalar);
 }
 
-void combine(int main, int sub, vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
+void combine(int parent, int child, vector<mat4> &models)
 {
-    translation[sub] = translation[main] * translation[sub];
-    rotation[sub] = rotation[sub] * rotation[main];
-    scalar[sub] = scalar[sub] * scalar[main];
+    models[child] = models[parent] * models[child];
 }
 
-void setConnect(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
+void setConnect(vector<mat4> &models)
 {
     // body conduct
-    std::cout << rotation[BODY].x << " " << rotation[BODY].y << " " << rotation[BODY].z << std::endl;
-    std::cout << rotation[HEAD].x << " " << rotation[HEAD].y << " " << rotation[HEAD].z << std::endl;
-    combine(BODY, HEAD, translation, rotation, scalar);
-    std::cout << rotation[BODY].x << " " << rotation[BODY].y << " " << rotation[BODY].z << std::endl;
-    std::cout << rotation[HEAD].x << " " << rotation[HEAD].y << " " << rotation[HEAD].z << std::endl;
-    combine(BODY, LOWER_BODY, translation, rotation, scalar);
-    combine(BODY, LEFT_UPPER_ARM, translation, rotation, scalar);
-    combine(BODY, RIGHT_UPPER_ARM, translation, rotation, scalar);
+    combine(BODY, HEAD, models);
+    combine(BODY, LOWER_BODY, models);
+    combine(BODY, LEFT_UPPER_ARM, models);
+    combine(BODY, RIGHT_UPPER_ARM, models);
 
     // lower body conduct
-    combine(LOWER_BODY, LEFT_UPPER_LEG, translation, rotation, scalar);
-    combine(LOWER_BODY, RIGHT_UPPER_LEG, translation, rotation, scalar);
+    combine(LOWER_BODY, LEFT_UPPER_LEG, models);
+    combine(LOWER_BODY, RIGHT_UPPER_LEG, models);
 
     // upper conduct
-    combine(LEFT_UPPER_ARM, LEFT_LOWER_ARM, translation, rotation, scalar);
-    combine(RIGHT_UPPER_ARM, RIGHT_LOWER_ARM, translation, rotation, scalar);
-    combine(LEFT_UPPER_LEG, LEFT_LOWER_LEG, translation, rotation, scalar);
-    combine(RIGHT_UPPER_LEG, RIGHT_LOWER_LEG, translation, rotation, scalar);
+    combine(LEFT_UPPER_ARM, LEFT_LOWER_ARM, models);
+    combine(RIGHT_UPPER_ARM, RIGHT_LOWER_ARM, models);
+    combine(LEFT_UPPER_LEG, LEFT_LOWER_LEG, models);
+    combine(RIGHT_UPPER_LEG, RIGHT_LOWER_LEG, models);
 
     // lower conduct
-    combine(LEFT_LOWER_ARM, LEFT_HAND, translation, rotation, scalar);
-    combine(RIGHT_LOWER_ARM, RIGHT_HAND, translation, rotation, scalar);
-    combine(LEFT_LOWER_LEG, LEFT_FOOT, translation, rotation, scalar);
-    combine(RIGHT_LOWER_LEG, RIGHT_FOOT, translation, rotation, scalar);
+    combine(LEFT_LOWER_ARM, LEFT_HAND, models);
+    combine(RIGHT_LOWER_ARM, RIGHT_HAND, models);
+    combine(LEFT_LOWER_LEG, LEFT_FOOT, models);
+    combine(RIGHT_LOWER_LEG, RIGHT_FOOT, models);
 }
 
-void stand(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
+vector<mat4> stand(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
 {
-    translation[HEAD] = glm::vec3(0.0f, 1.0f, -0.04f);
     translation[BODY] = glm::vec3(0.0f, 1.3f, 0.0f);
-    rotation[BODY] = glm::vec3(0.0f, 0.0f, 30.0f);
-    // translation[LOWER_BODY] = glm::vec3(0.0f, -0.2f, 0.0f);
-    // translation[LEFT_FOOT] = glm::vec3(0.5f, 0.0f, 0.0f);
-    // translation[LEFT_HAND] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[LEFT_LOWER_ARM] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[LEFT_LOWER_LEG] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[LEFT_UPPER_ARM] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[LEFT_UPPER_LEG] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[RIGHT_FOOT] = glm::vec3(-0.5f, 0.0f, 0.0f);
-    // translation[RIGHT_HAND] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[RIGHT_LOWER_ARM] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[RIGHT_LOWER_LEG] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[RIGHT_UPPER_ARM] = glm::vec3(0.0f, -0.8f, 0.0f);
-    // translation[RIGHT_UPPER_LEG] = glm::vec3(0.0f, -0.8f, 0.0f);
+    translation[LOWER_BODY] = glm::vec3(0.0f, -0.3f, 0.0f);
 
-    setConnect(translation, rotation, scalar);
+    translation[HEAD] = vec3(0.0f, 0.3f, -0.04f);
+    translation[LEFT_UPPER_ARM] = vec3(0.23f, 0.15f, -0.08f);
+    translation[RIGHT_UPPER_ARM] = vec3(-0.22f, 0.15f, -0.08f);
+
+    translation[LEFT_UPPER_LEG] = vec3(0.15f, -0.08f, 0.025f);
+    translation[RIGHT_UPPER_LEG] = vec3(-0.15f, -0.08f, 0.025f);
+
+    translation[LEFT_LOWER_ARM] = vec3(0.07f, -0.2f, -0.06f);
+    translation[RIGHT_LOWER_ARM] = vec3(-0.1f, -0.23f, -0.05f);
+    translation[LEFT_LOWER_LEG] = vec3(0.0f, -0.45f, 0.0f);
+    translation[RIGHT_LOWER_LEG] = vec3(0.0f, -0.45f, 0.0f);
+
+    translation[LEFT_HAND] = vec3(0.05f, -0.2f, 0.08f);
+    translation[RIGHT_HAND] = vec3(-0.05f, -0.2f, 0.08f);
+    translation[LEFT_FOOT] = vec3(0.0f, -0.4f, -0.05f);
+    translation[RIGHT_FOOT] = vec3(0.0f, -0.4f, -0.05f);
+
+    translation[BODY] += glm::vec3(0.0f, 0.0f, -5.0f);
+    rotation[LEFT_UPPER_ARM] = vec3(60.0f, 0.0f, 0.0f);
+    rotation[RIGHT_UPPER_ARM] = vec3(-60.0f, 0.0f, 0.0f);
+    rotation[LEFT_UPPER_LEG] = vec3(30.0f, 0.0f, 0.0f);
+    rotation[RIGHT_UPPER_LEG] = vec3(-30.0f, 0.0f, 0.0f);
+
+    vector<mat4> models = produceModel(translation, rotation, scalar);
+    setConnect(models);
+
+    return models;
 }
 
-void walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
+vector<mat4> walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
 {
+    float time = glfwGetTime();
+    float func = -cos(time);
 
+    // std::cout << func << std::endl;
+
+    translation[BODY] += vec3(0.0f, 0.0f, 0.004f);
+
+    if (translation[BODY].z > 5.0f)
+    {
+        translation[BODY].z = -5.0f;
+    }
+
+    rotation[LEFT_UPPER_ARM] += vec3(func, 0.0f, 0.0f);
+    rotation[RIGHT_UPPER_ARM] += vec3(-func, 0.0f, 0.0f);
+    rotation[LEFT_UPPER_LEG] += vec3(func * 0.5, 0.0f, 0.0f);
+    rotation[RIGHT_UPPER_LEG] += vec3(-func * 0.5, 0.0f, 0.0f);
+
+    vector<mat4> models = produceModel(translation, rotation, scalar);
+    setConnect(models);
+
+    return models;
 }

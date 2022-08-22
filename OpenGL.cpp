@@ -29,6 +29,7 @@ vector<glm::vec3> scalar(BODY_PARTS, glm::vec3(1.0f));
 
 glm::mat4 projection;
 glm::mat4 view;
+vector<glm::mat4> model(BODY_PARTS, glm::mat4(1.0f));
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -162,8 +163,8 @@ void OpenGL::InitDefault()
 
 	std::cout << "[INFO] Shader program: " << shader.getProgram() << std::endl;
 
-	initial(translation, rotation, scalar);
-	stand(translation, rotation, scalar);
+	model = initial(translation, rotation, scalar);
+	model = stand(translation, rotation, scalar);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -235,14 +236,16 @@ void OpenGL::RenderLoop()
 		shader.setVec3("light.diffuse", lightDiffuse);
 		shader.setVec3("light.specular", lightSpecular);
 
+		// action
+		model = walk(translation, rotation, scalar);
+
 		// render with model matrix changing each frame
 		for (int i = 0; i < objects.size(); i++)
 		{
 			objects[i].Draw(shader);
 
-			shader.setVec3("size", scalar[i]);
-			shader.setVec3("rotation", rotation[i]);
-			shader.setVec3("translation", translation[i]);
+			// model matrix
+			shader.setMat4("model", model[i]);
 		}
 
 		// refresh
