@@ -30,7 +30,8 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 */
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    camera.ProcessMouseScroll(yoffset);
+    if (cursor_lock)
+        camera.ProcessMouseScroll(yoffset);
 }
 
 /*
@@ -50,11 +51,14 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
         firstMouse = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-    lastX = xpos;
-    lastY = ypos;
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    if (cursor_lock)
+    {
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+        lastX = xpos;
+        lastY = ypos;
+        camera.ProcessMouseMovement(xoffset, yoffset);
+    }
 }
 
 /*
@@ -70,16 +74,27 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        if (lightswitch)
+        if (cursor_lock)
         {
-            std::cout << "[INFO] Light is off" << std::endl;
-            lightswitch = false;
+            cursor_lock = false;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
         else
         {
-            std::cout << "[INFO] Light is on" << std::endl;
-            lightswitch = true;
+            cursor_lock = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
+
+        // if (lightswitch)
+        // {
+        //     std::cout << "[INFO] Light is off" << std::endl;
+        //     lightswitch = false;
+        // }
+        // else
+        // {
+        //     std::cout << "[INFO] Light is on" << std::endl;
+        //     lightswitch = true;
+        // }
     }
 }
 

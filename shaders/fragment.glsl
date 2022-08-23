@@ -23,6 +23,8 @@ uniform Material material;
 uniform Light light;
 uniform sampler2D texture_diffuse1;
 uniform bool lightswitch = true;
+uniform bool onlymaterial = false;
+uniform bool textureswitch = true;
 
 out vec4 FragColor;
 
@@ -46,11 +48,16 @@ void main ()
 	// finalColor
 	vec3 finalColor;
 
-	if (lightswitch) {
-		finalColor = ambientColor + diffuseColor + specularColor;
-	} else {
-		finalColor = ambientColor + diffuseColor;
-	}
+	finalColor = ambientColor + diffuseColor;
 
-	FragColor = vec4(finalColor, 1.0) + texture(texture_diffuse1, fTexCoord);
+	if (lightswitch)
+		finalColor = ambientColor + diffuseColor + specularColor;
+
+	if (onlymaterial)
+		finalColor = (material.ambient + material.diffuse) / 2.0;
+
+	if (textureswitch)
+		finalColor += texture(texture_diffuse1, fTexCoord).rgb;
+
+	FragColor = vec4(finalColor, 1.0);
 }

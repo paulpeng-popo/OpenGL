@@ -107,8 +107,6 @@ vector<mat4> walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3
     float offset = 45.0f;
     float func = amp * cos(freq * (time + offset));
 
-    // std::cout << func << std::endl;
-
     translation[BODY] += vec3(0.0f, 0.0f, 0.004f);
 
     if (translation[BODY].z > 5.0f)
@@ -118,8 +116,8 @@ vector<mat4> walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3
 
     rotation[LEFT_UPPER_ARM] += vec3(func, 0.0f, 0.0f);
     rotation[RIGHT_UPPER_ARM] += vec3(-func, 0.0f, 0.0f);
-    rotation[LEFT_UPPER_LEG] += vec3(func * 0.5, 0.0f, 0.0f);
-    rotation[RIGHT_UPPER_LEG] += vec3(-func * 0.5, 0.0f, 0.0f);
+    rotation[LEFT_UPPER_LEG] += vec3(-func * 0.5, 0.0f, 0.0f);
+    rotation[RIGHT_UPPER_LEG] += vec3(func * 0.5, 0.0f, 0.0f);
 
     vector<mat4> models = produceModel(translation, rotation, scalar);
     setConnect(models);

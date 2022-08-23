@@ -40,6 +40,7 @@ extern Camera camera;
 extern float lastX;
 extern float lastY;
 extern bool firstMouse;
+extern bool cursor_lock;
 extern float deltaTime;
 extern bool lightswitch;
 

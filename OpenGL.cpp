@@ -24,8 +24,13 @@ GLFWwindow *window;
 // Camera
 Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
 bool firstMouse = true;
+bool cursor_lock = true;
 float lastX;
 float lastY;
+
+bool wireframe = false;
+bool walking = false;
+glm::vec4 bgColor = glm::vec4(0.2f, 0.3f, 0.3f, 1.0f); // gray-green
 
 vector<glm::vec3> translation(BODY_PARTS, glm::vec3(0.0f));
 vector<glm::vec3> rotation(BODY_PARTS, glm::vec3(0.0f));
@@ -41,9 +46,9 @@ float lastFrame = 0.0f;
 bool lightswitch = true;
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
-glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
-glm::vec3 lightSpecular = lightColor * glm::vec3(1.0f);
+
+bool onlymaterial = false;
+bool textureswitch = true;
 
 // find out the path of all objecs in the directory
 std::vector<std::string> get_obj_paths(std::string directory)
@@ -182,7 +187,7 @@ int OpenGL::UseIMGUI()
 */
 void OpenGL::InitDefault()
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // gray-green
+	glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
 	shader = GLShader(vs_path, fs_path);
 
 	std::cout << "[INFO] Shader program: " << shader.getProgram() << std::endl;
@@ -192,7 +197,7 @@ void OpenGL::InitDefault()
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	// glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 }
 
 /*
@@ -233,14 +238,21 @@ void OpenGL::RenderLoop()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+		// error checker
 		glCheckError();
 
 		// input
 		processInput(window);
 
 		// render
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// polygon mode
+		if (wireframe)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		else
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		// IMGUI
 		ImGui_ImplOpenGL3_NewFrame();
@@ -259,14 +271,22 @@ void OpenGL::RenderLoop()
 		shader.setVec3("camera.position", camera.Position);
 
 		// light
+		glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
+		glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
+		glm::vec3 lightSpecular = lightColor * glm::vec3(1.0f);
+
 		shader.setBool("lightswitch", lightswitch);
 		shader.setVec3("light.position", lightPos);
 		shader.setVec3("light.ambient", lightAmbient);
 		shader.setVec3("light.diffuse", lightDiffuse);
 		shader.setVec3("light.specular", lightSpecular);
 
+		shader.setBool("textureswitch", textureswitch);
+		shader.setBool("onlymaterial", onlymaterial);
+
 		// action
-		model = walk(translation, rotation, scalar);
+		if (walking)
+			model = walk(translation, rotation, scalar);
 
 		// render with model matrix changing each frame
 		for (int i = 0; i < objects.size(); i++)
@@ -279,9 +299,17 @@ void OpenGL::RenderLoop()
 
 		// IMGUI
 		ImGui::Begin("Settings");
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::SetWindowPos(ImVec2(10, 10));
+		ImGui::SetWindowSize(ImVec2(400, 250));
+		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Checkbox("IsWalk", &walking);
+		ImGui::Checkbox("Wireframe", &wireframe);
 		ImGui::Checkbox("Light Switch", &lightswitch);
-		// ImGui::Checkbox("Wireframe", &wireframe);
+		ImGui::ColorEdit3("Light Color", (float *)&lightColor);
+		ImGui::InputFloat3("Light Position", (float *)&lightPos);
+		ImGui::ColorEdit4("Background Color", (float *)&bgColor);
+		ImGui::Checkbox("Texture Switch", &textureswitch);
+		ImGui::Checkbox("Only Material", &onlymaterial);
 		ImGui::End();
 
 		ImGui::Render();
