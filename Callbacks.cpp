@@ -18,6 +18,8 @@
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
+    screen_width = width;
+    screen_height = height;
 }
 
 /*
@@ -78,11 +80,13 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
         {
             cursor_lock = false;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
         }
         else
         {
             cursor_lock = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
         }
 
         // if (lightswitch)

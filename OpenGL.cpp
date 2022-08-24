@@ -20,6 +20,8 @@ std::string obj_path = ".\\src\\objects\\";
 
 GLShader shader;
 GLFWwindow *window;
+int screen_width;
+int screen_height;
 
 // Camera
 Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
@@ -139,6 +141,9 @@ int OpenGL::UseGLFW()
 	lastX = (float)width / 2.0f;
 	lastY = (float)height / 2.0f;
 
+	screen_width = width;
+	screen_height = height;
+
 	return 0;
 }
 
@@ -194,6 +199,9 @@ void OpenGL::InitDefault()
 
 	model = initial(translation, rotation, scalar);
 	model = stand(translation, rotation, scalar);
+
+	startTime = 0.0f;
+	actionFreq = 0.01f;
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -287,6 +295,8 @@ void OpenGL::RenderLoop()
 		// action
 		if (walking)
 			model = walk(translation, rotation, scalar);
+		else
+			model = stand(translation, rotation, scalar);
 
 		// render with model matrix changing each frame
 		for (int i = 0; i < objects.size(); i++)
@@ -300,9 +310,10 @@ void OpenGL::RenderLoop()
 		// IMGUI
 		ImGui::Begin("Settings");
 		ImGui::SetWindowPos(ImVec2(10, 10));
-		ImGui::SetWindowSize(ImVec2(400, 250));
+		ImGui::SetWindowSize(ImVec2(400, 260));
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Checkbox("IsWalk", &walking);
+		ImGui::SliderFloat("Walk Speed", &actionFreq, 0.0f, 1.0f);
 		ImGui::Checkbox("Wireframe", &wireframe);
 		ImGui::Checkbox("Light Switch", &lightswitch);
 		ImGui::ColorEdit3("Light Color", (float *)&lightColor);

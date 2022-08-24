@@ -7,7 +7,11 @@
 
 #include "myheaders/Actions.h"
 
-vector<mat4> produceModel(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
+float startTime = 0.0f;
+float actionFreq = 0.0f;
+
+vector<mat4>
+produceModel(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
 {
     vector<mat4> model(BODY_PARTS, mat4(1.0f));
 
@@ -87,11 +91,13 @@ vector<mat4> stand(vector<vec3> &translation, vector<vec3> &rotation, vector<vec
     translation[LEFT_FOOT] = vec3(0.0f, -0.4f, -0.05f);
     translation[RIGHT_FOOT] = vec3(0.0f, -0.4f, -0.05f);
 
-    translation[BODY] += glm::vec3(0.0f, 0.0f, -5.0f);
-    rotation[LEFT_UPPER_ARM] = glm::vec3(-30.0f, 0.0f, 0.0f);
-    rotation[RIGHT_UPPER_ARM] = glm::vec3(30.0f, 0.0f, 0.0f);
-    rotation[LEFT_UPPER_LEG] = glm::vec3(-15.0f, 0.0f, 0.0f);
-    rotation[RIGHT_UPPER_LEG] = glm::vec3(15.0f, 0.0f, 0.0f);
+    translation[BODY] = glm::vec3(0.0f, 0.0f, -5.0f);
+
+    for (int i = 0; i < BODY_PARTS; i++)
+    {
+        rotation[i] = glm::vec3(0.0f);
+        scalar[i] = glm::vec3(1.0f);
+    }
 
     vector<mat4> models = produceModel(translation, rotation, scalar);
     setConnect(models);
@@ -101,23 +107,36 @@ vector<mat4> stand(vector<vec3> &translation, vector<vec3> &rotation, vector<vec
 
 vector<mat4> walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar)
 {
-    float time = glfwGetTime();
-    float freq = 2.0f;
-    float amp = 1.0f;
-    float offset = 45.0f;
-    float func = amp * cos(freq * (time + offset));
+    startTime += actionFreq;
+    float cfunc = 30.0f * cos(startTime);
+    float func = 0.003f * cos(2 * (startTime - 1.57f));
 
-    translation[BODY] += vec3(0.0f, 0.0f, 0.004f);
+    translation[BODY] += glm::vec3(0.0f, func, actionFreq / 3.3f);
+
+    if (30.0f - abs(cfunc) <= 0.05f)
+        translation[BODY] += glm::vec3(0.0f, 0.0f, actionFreq / 10.0f);
+
+    if (startTime > 2.0f * glm::pi<float>())
+    {
+        startTime = 0.0f;
+    }
 
     if (translation[BODY].z > 5.0f)
     {
-        translation[BODY].z = -5.0f;
+        translation[BODY] = glm::vec3(0.0f, 0.0f, -5.0f);
     }
 
-    rotation[LEFT_UPPER_ARM] += vec3(func, 0.0f, 0.0f);
-    rotation[RIGHT_UPPER_ARM] += vec3(-func, 0.0f, 0.0f);
-    rotation[LEFT_UPPER_LEG] += vec3(-func * 0.5, 0.0f, 0.0f);
-    rotation[RIGHT_UPPER_LEG] += vec3(func * 0.5, 0.0f, 0.0f);
+    rotation[LEFT_UPPER_ARM] = vec3(cfunc, 0.0f, 0.0f);
+    rotation[LEFT_LOWER_ARM] = vec3(cfunc, 0.0f, 0.0f);
+
+    rotation[RIGHT_UPPER_ARM] = vec3(-cfunc, 0.0f, 0.0f);
+    rotation[RIGHT_LOWER_ARM] = vec3(-cfunc, 0.0f, 0.0f);
+
+    rotation[LEFT_UPPER_LEG] = vec3(-cfunc, 0.0f, 0.0f);
+    rotation[LEFT_LOWER_LEG] = vec3((-cfunc + 30.0f) / 2.0f, 0.0f, 0.0f);
+
+    rotation[RIGHT_UPPER_LEG] = vec3(cfunc, 0.0f, 0.0f);
+    rotation[RIGHT_LOWER_LEG] = vec3((cfunc + 30.0f) / 2.0f, 0.0f, 0.0f);
 
     vector<mat4> models = produceModel(translation, rotation, scalar);
     setConnect(models);

@@ -36,6 +36,8 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 void processInput(GLFWwindow *window);
 
 extern GLFWwindow *window;
+extern int screen_width;
+extern int screen_height;
 extern Camera camera;
 extern float lastX;
 extern float lastY;

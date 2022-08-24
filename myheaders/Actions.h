@@ -36,6 +36,9 @@
 using namespace std;
 using namespace glm;
 
+extern float startTime;
+extern float actionFreq;
+
 vector<mat4> produceModel(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar);
 vector<mat4> initial(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3> &scalar);
 void combine(int parent, int child, vector<mat4> &models);
