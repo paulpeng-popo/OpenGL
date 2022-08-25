@@ -3,6 +3,7 @@ objects/backpack/
 objects/nanosuit/
 objects/robot/
 objects/textures/
-!imgui.ini
-!.vscode/
+build/
+.vscode/
+!.vscode/settings.json
 !.gitiignore
