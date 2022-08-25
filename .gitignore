@@ -1,3 +1,8 @@
-objects/
-nanosuit/
-backpack/
+objects/3dmeshes/
+objects/backpack/
+objects/nanosuit/
+objects/robot/
+objects/textures/
+!imgui.ini
+!.vscode/
+!.gitiignore
