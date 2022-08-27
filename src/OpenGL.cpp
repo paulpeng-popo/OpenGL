@@ -236,13 +236,13 @@ void OpenGL::RenderLoop()
 	std::vector<ModelLoader> objects;
 	std::vector<std::string> paths = get_obj_paths(obj_path);
 
-	for (int i = 0; i < paths.size(); i++)
-	{
-		objects.push_back(ModelLoader(paths[i]));
-	}
+	// for (int i = 0; i < paths.size(); i++)
+	// {
+	// 	objects.push_back(ModelLoader(paths[i]));
+	// }
 
-	OpenMesh::TriMesh_ArrayKernelT<> mesh;
-	OpenMesh::IO::read_mesh(mesh, paths[0]);
+	// OpenMesh::TriMesh_ArrayKernelT<> mesh;
+	// OpenMesh::IO::read_mesh(mesh, paths[0]);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -306,7 +306,7 @@ void OpenGL::RenderLoop()
 		// render with model matrix changing each frame
 		for (int i = 0; i < objects.size(); i++)
 		{
-			objects[i].Draw(shader);
+			// objects[i].Draw(shader);
 
 			// model matrix
 			shader.setMat4("model", model[i]);
