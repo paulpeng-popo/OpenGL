@@ -12,7 +12,8 @@
 #### Required
 
 + [MinGW64](https://github.com/niXman/mingw-builds-binaries/releases)
-  + x86_64-win32-seh
+  + x86_64-posix-seh (if using thread)
+  + x86_64-win32-seh (for general purpose)
 + [Cmake](https://cmake.org/download/)
 + [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)
 + [GLFW](https://www.glfw.org/download.html)
@@ -24,6 +25,7 @@
 + [Assimp](https://github.com/assimp/assimp)
 + [OpenMesh](https://www.graphics.rwth-aachen.de/software/openmesh/)
   + [QT5](https://www.qt.io/download-qt-installer)
+  + [Doxygen](https://doxygen.nl/)
 
 ### Stpes
 
