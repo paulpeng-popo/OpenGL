@@ -21,6 +21,9 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <OpenMesh/Core/IO/MeshIO.hh>
+#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+
 #include "Camera.h"
 
 #define deg2rad(x) ((x) * ((3.1415926f) / (180.0f)))

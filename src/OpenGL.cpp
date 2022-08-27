@@ -241,6 +241,9 @@ void OpenGL::RenderLoop()
 		objects.push_back(ModelLoader(paths[i]));
 	}
 
+	OpenMesh::TriMesh_ArrayKernelT<> mesh;
+	OpenMesh::IO::read_mesh(mesh, paths[0]);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
