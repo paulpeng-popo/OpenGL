@@ -23,7 +23,7 @@
 #### Optional
 
 + [Assimp](https://github.com/assimp/assimp)
-+ [OpenMesh](https://www.graphics.rwth-aachen.de/software/openmesh/)
++ [OpenMesh-8.1](https://www.graphics.rwth-aachen.de/software/openmesh/) (OpenMesh-9.0 has some bugs)
   + [QT5](https://www.qt.io/download-qt-installer)
   + [Doxygen](https://doxygen.nl/)
 
