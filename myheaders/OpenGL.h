@@ -1,8 +1,8 @@
 /*
 	File: OpenGL.h
-	Custom header utilities
+	OpenGL utility class
 	Author: Paul peng
-	Date: 2022.8.20
+	Date: 2022.8.28
 */
 
 #ifndef __OPENGL_H__
@@ -17,12 +17,11 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include <OpenMesh/Core/IO/MeshIO.hh>
-#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.h"
 
@@ -32,38 +31,38 @@
 
 GLenum glCheckError_(const char *file, int line);
 void error_callback(int error, const char *description);
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void resize_callback(GLFWwindow *window, int width, int height);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 void processInput(GLFWwindow *window);
 
 extern GLFWwindow *window;
-extern int screen_width;
-extern int screen_height;
+
 extern Camera camera;
+
+extern float deltaTime;
+
 extern float lastX;
 extern float lastY;
-extern bool firstMouse;
-extern bool cursor_lock;
-extern float deltaTime;
-extern bool lightswitch;
+extern int screen_width;
+extern int screen_height;
 
 class OpenGL
 {
 private:
 	// windows settings
+	std::string title;
 	int width;
 	int height;
-	std::string window_name;
 
 public:
 	// constructors and destructor
 	OpenGL();
-	OpenGL(int width, int height, std::string title);
+	OpenGL(int w, int h, std::string str);
 	~OpenGL();
 
-	// glutInitFuncs
+	// opengl initialization
 	int UseGLFW();
 	int UseGLAD();
 	int UseIMGUI();

@@ -1,113 +1,59 @@
 /*
     File: Callbacks.cpp
-    Custom header implementation
+    Callbacks implementation
     Author: Paul peng
-    Date: 2022.8.16
+    Date: 2022.8.28
 */
 
 #include "../myheaders/OpenGL.h"
 
-/*
-    Function: Set viewport dynamically fit window size
-    Params:
-        window: GLFWwindow identifier
-        width:  Width after resizing
-        height: Height after resizing
-    Return:		None
-*/
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+float lastX = screen_width / 2.0f;
+float lastY = screen_height / 2.0f;
+
+float clickedX = 0.0f;
+float clickedY = 0.0f;
+bool mouse_click = false;
+
+void resize_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
     screen_width = width;
     screen_height = height;
 }
 
-/*
-    Function: Use mouse scroll to control camera zoom in and out
-    Params:
-        window: GLFWwindow identifier
-        xoffset:  Scroll x offset
-        yoffset: Scroll y offset
-    Return:		None
-*/
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    if (cursor_lock)
-        camera.ProcessMouseScroll(yoffset);
+    camera.ProcessMouseScroll(yoffset);
 }
 
-/*
-    Function: Use mouse to control camera direction
-    Params:
-        window: GLFWwindow identifier
-        xpos:  Mouse x position
-        ypos: Mouse y position
-    Return:		None
-*/
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
+    lastX = xpos;
+    lastY = ypos;
 
-    if (cursor_lock)
+    if (mouse_click)
     {
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-        lastX = xpos;
-        lastY = ypos;
+        float xoffset = xpos - clickedX;
+        float yoffset = clickedY - ypos;
         camera.ProcessMouseMovement(xoffset, yoffset);
     }
 }
 
-/*
-    Function: Use mouse button to control light switch
-    Params:
-        window: GLFWwindow identifier
-        button: Mouse button
-        action: Mouse action
-        mods: Mouse modifiers
-    Return:		None
-*/
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        if (cursor_lock)
-        {
-            cursor_lock = false;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
-        }
-        else
-        {
-            cursor_lock = true;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
-        }
+        clickedX = lastX;
+        clickedY = lastY;
+        mouse_click = true;
+    }
 
-        // if (lightswitch)
-        // {
-        //     std::cout << "[INFO] Light is off" << std::endl;
-        //     lightswitch = false;
-        // }
-        // else
-        // {
-        //     std::cout << "[INFO] Light is on" << std::endl;
-        //     lightswitch = true;
-        // }
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    {
+        mouse_click = false;
     }
 }
 
-/*
-    Function: Manipulate keyboard input in glfw window
-    Params:
-        window: GLFWwindow identifier
-    Return:		None
-*/
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -123,23 +69,11 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
-/*
-    Function: GLFW callback for error checker
-    Params:		None
-    Return:		None
-*/
 void error_callback(int error, const char *description)
 {
     fprintf(stderr, "[Error] %s\n", description);
 }
 
-/*
-    Function: My custom error checker
-    Params:
-        file:	Error located file
-        line:	Error located line
-    Return:		Error code
-*/
 GLenum glCheckError_(const char *file, int line)
 {
     GLenum errorCode;

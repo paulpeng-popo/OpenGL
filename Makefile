@@ -1,5 +1,5 @@
 CXX := g++
-CXX_FLAG := -g -std=c++17
+CXX_FLAG := -g -ansi -Wall -std=c++17
 
 INCLUDE := ../include
 LIB := ../lib
@@ -16,20 +16,29 @@ ALL_DLL := ($(subst /,\\,$(DLLS)))
 
 BUILD_DIR := build
 BUILD_SRC := (shaders objects)
-EXECUTABLE := $(BUILD_DIR)\\robot
-EXEC := .\\$(EXECUTABLE)
+
+DEBUG := $(BUILD_DIR)\\robot_debug
+DEBUG_EXEC := .\\$(DEBUG)
+
+RELEASE := $(BUILD_DIR)\\robot_release
 
 
+.PHONY: release
 .PHONY: build
 .PHONY: clean
+.PHONY: help
 
 
-all: build $(EXECUTABLE)
+all: build $(DEBUG)
+	@ copy $(IMGUI_CONFIG) . > NUL
 	@ echo [INFO] Executing project ...
 	@ echo [START]
-	@ $(EXEC)
+	@ $(DEBUG_EXEC)
 	@ echo [END]
 	@ if exist imgui.ini del imgui.ini
+
+release: build $(RELEASE)
+	@ echo [INFO] Release version done
 
 build: clean
 	@ echo [INFO] Building project ...
@@ -38,13 +47,24 @@ build: clean
 		@ copy %%s $(BUILD_DIR) > NUL
 	@ for %%s in $(BUILD_SRC); do \
 		@ xcopy %%s $(BUILD_DIR)\\%%s /E/H/C/I/Y /EXCLUDE:except.txt > NUL
-	@ copy $(IMGUI_CONFIG) . > NUL
 	@ copy $(IMGUI_CONFIG) $(BUILD_DIR) > NUL
 
-$(EXECUTABLE): $(ALL_CPP)
+$(DEBUG): $(ALL_CPP)
 	@ echo [INFO] Compiling source codes ...
-	@ $(CXX) $(CXX_FLAG) -I$(INCLUDE) -L$(LIB) $^ -o $@ $(LIBRARIES)
+	@ $(CXX) -DDEBUG_MODE=1 $(CXX_FLAG) -I$(INCLUDE) -L$(LIB) $^ -o $@ $(LIBRARIES)
+
+$(RELEASE): $(ALL_CPP)
+	@ echo [INFO] Compiling source codes ...
+	@ $(CXX) -DDEBUG_MODE=0 $(CXX_FLAG) -I$(INCLUDE) -L$(LIB) $^ -o $@ $(LIBRARIES)
 
 clean:
 	@ if exist $(BUILD_DIR) rmdir /q/s $(BUILD_DIR)
 	@ echo [INFO] Redundant files removed
+
+help:
+	@echo Usage: make [target] (default is all)
+	@echo Available targets:
+	@echo 	all:		Builds debugging target and executes it
+	@echo 	release:	Builds release target
+	@echo 	build:		Builds execute environment
+	@echo 	clean:		Removes build directory

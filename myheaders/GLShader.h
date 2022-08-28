@@ -1,8 +1,8 @@
 /*
     File: GLShader.h
-    Shaders utility functions
+    Shaders Loader class
     Author: Paul peng
-    Date: 2022.8.20
+    Date: 2022.8.28
 */
 
 #ifndef __GLSHADER_H__
@@ -24,8 +24,7 @@ public:
     ~GLShader();
 
     void use();
-    void deleteProgram();
-    GLuint getProgram();
+    void del();
     void setMat4(const std::string &name, glm::mat4 value) const;
     void setVec3(const std::string &name, glm::vec3 value) const;
     void setFloat(const std::string &name, float value) const;

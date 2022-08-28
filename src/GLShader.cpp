@@ -1,11 +1,12 @@
 /*
     File: GLShader.cpp
-    Shaders implementation
+    Shaders Loader Implementation
     Author: Paul peng
-    Date: 2022.8.20
+    Date: 2022.8.28
 */
 
 #include "../myheaders/GLShader.h"
+#include "../myheaders/Error_Debug.h"
 
 GLShader::GLShader() {}
 
@@ -16,7 +17,12 @@ GLShader::GLShader(const std::string vertexPath, const std::string fragmentPath)
 
 GLShader::~GLShader() {}
 
-void GLShader::deleteProgram()
+void GLShader::use()
+{
+    glUseProgram(Program);
+}
+
+void GLShader::del()
 {
     glDeleteProgram(Program);
 }
@@ -28,8 +34,7 @@ std::string GLShader::ReadFile(const std::string path)
 
     if (!fileStream.is_open())
     {
-        std::cerr << "[ERROR] Could not read file " << path << "." << std::endl;
-        std::cerr << "\tFile does not exist." << std::endl;
+        ERROR("Failed to read file: " + path);
         return "";
     }
 
@@ -57,28 +62,28 @@ GLuint GLShader::CreateShader(const GLchar *vertexCode, const GLchar *fragmentCo
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-    std::cout << "[INFO] Compiling vertex shader ..." << std::endl;
-    
+    DEBUG("Compiling vertex shader");
+
     glShaderSource(vertexShader, 1, &vertexCode, NULL);
     glCompileShader(vertexShader);
     CheckCompileErrors(vertexShader, "VERTEX");
 
-    std::cout << "[INFO] Compiling fragment shader ..." << std::endl;
-    
+    DEBUG("Compiling fragment shader");
+
     glShaderSource(fragmentShader, 1, &fragmentCode, NULL);
     glCompileShader(fragmentShader);
     CheckCompileErrors(fragmentShader, "FRAGMENT");
 
-    std::cout << "[INFO] Linking program ..." << std::endl;
+    DEBUG("Linking program");
 
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
     glLinkProgram(program);
     CheckCompileErrors(program, "PROGRAM");
-    
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    
+
     return program;
 }
 
@@ -93,7 +98,7 @@ void GLShader::CheckCompileErrors(GLuint shader, std::string type)
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
         std::vector<char> ShaderError((logLength > 1) ? logLength : 1);
         glGetShaderInfoLog(shader, logLength, NULL, &ShaderError[0]);
-        std::cout << &ShaderError[0] << std::endl;
+        RAW_DEBUG("%s", &ShaderError[0]);
     }
     else
     {
@@ -101,18 +106,8 @@ void GLShader::CheckCompileErrors(GLuint shader, std::string type)
         glGetProgramiv(shader, GL_INFO_LOG_LENGTH, &logLength);
         std::vector<char> programError((logLength > 1) ? logLength : 1);
         glGetProgramInfoLog(shader, logLength, NULL, &programError[0]);
-        std::cout << &programError[0] << std::endl;
+        RAW_DEBUG("%s", &programError[0]);
     }
-}
-
-GLuint GLShader::getProgram()
-{
-    return Program;
-}
-
-void GLShader::use()
-{
-    glUseProgram(Program);
 }
 
 void GLShader::setMat4(const std::string &name, glm::mat4 value) const
