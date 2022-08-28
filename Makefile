@@ -17,10 +17,10 @@ ALL_DLL := ($(subst /,\\,$(DLLS)))
 BUILD_DIR := build
 BUILD_SRC := (shaders objects)
 
-DEBUG := $(BUILD_DIR)\\robot_debug
+DEBUG := $(BUILD_DIR)\\texture_debug
 DEBUG_EXEC := .\\$(DEBUG)
 
-RELEASE := $(BUILD_DIR)\\robot_release
+RELEASE := $(BUILD_DIR)\\texture_release
 
 
 .PHONY: release
