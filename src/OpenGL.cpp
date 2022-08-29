@@ -176,6 +176,7 @@ bool VectorOfStringGetter(void *data, int n, const char **out_text)
 {
 	const std::vector<std::string> *v = (std::vector<std::string> *)data;
 	std::string str = (*v)[n];
+	str = str.substr(str.find_last_of("/\\") + 1);
 	*out_text = str.c_str();
 	return true;
 }
@@ -186,6 +187,7 @@ void OpenGL::RenderLoop()
 
 	int size = paths.size();
 	int selectedMesh = 5;
+	int selected = selectedMesh;
 	MeshLoader mesh(paths[selectedMesh]);
 
 	while (!glfwWindowShouldClose(window))
@@ -237,6 +239,15 @@ void OpenGL::RenderLoop()
 		shader.setVec3("light.diffuse", lightDiffuse);
 		shader.setVec3("light.specular", lightSpecular);
 
+		// Mesh painting
+		if (selectedMesh != selected)
+		{
+			mesh.loadMesh(paths[selectedMesh]);
+			selected = selectedMesh;
+		}
+
+		mesh.paintMesh();
+
 		// IMGUI
 		ImGui::Begin("Settings");
 		ImGui::SetWindowPos(ImVec2(10, 10));
@@ -244,7 +255,6 @@ void OpenGL::RenderLoop()
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Checkbox("Wireframe", &wireframe);
 		ImGui::ListBox("Mesh", &selectedMesh, VectorOfStringGetter, &paths, size);
-		ImGui::Text("Index %d", selectedMesh);
 
 		if (ImGui::Button("Add Texture"))
 		{
@@ -272,9 +282,6 @@ void OpenGL::RenderLoop()
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		// Mesh painting
-		mesh.paintMesh();
 
 		// refresh
 		glfwSwapBuffers(window); // swap buffers
