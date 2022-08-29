@@ -1,6 +1,7 @@
 #ifndef __CAMERA_H__
 #define __CAMERA_H__
 
+#include <iostream>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -8,8 +9,8 @@
 
 enum Camera_Movement
 {
-    FORWARD,  // 0
-    BACKWARD, // 1
+    UPWARD,   // 0
+    DOWNWARD, // 1
     LEFT,     // 2
     RIGHT     // 3
 };
@@ -17,7 +18,7 @@ enum Camera_Movement
 // Default camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 3.0f;
+const float SPEED = 0.005f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 

@@ -35,7 +35,18 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
     {
         float xoffset = xpos - clickedX;
         float yoffset = clickedY - ypos;
-        camera.ProcessMouseMovement(xoffset, yoffset);
+
+        if (yoffset < 0)
+            camera.ProcessKeyboard(UPWARD, abs(yoffset));
+        if (yoffset > 0)
+            camera.ProcessKeyboard(DOWNWARD, abs(yoffset));
+        if (xoffset > 0)
+            camera.ProcessKeyboard(LEFT, abs(xoffset));
+        if (xoffset < 0)
+            camera.ProcessKeyboard(RIGHT, abs(xoffset));
+
+        clickedX = lastX;
+        clickedY = lastY;
     }
 }
 
@@ -43,12 +54,11 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
+        mouse_click = true;
         clickedX = lastX;
         clickedY = lastY;
-        mouse_click = true;
     }
-
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
     {
         mouse_click = false;
     }
@@ -58,15 +68,6 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 void error_callback(int error, const char *description)

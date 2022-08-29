@@ -46,6 +46,7 @@ public:
     std::vector<TriMesh::Normal> normals;
 
     MeshLoader();
+    MeshLoader(std::string file);
     ~MeshLoader();
     void loadMesh(std::string file);
     void paintMesh();

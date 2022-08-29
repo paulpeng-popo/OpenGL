@@ -17,10 +17,10 @@
 
 std::string vs_path = "shaders/vertex.glsl";
 std::string fs_path = "shaders/fragment.glsl";
-std::string obj_path = "objects/";
+std::string obj_path = "objects/3dmeshes/";
 
 // Camera
-Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 4.0f));
 
 bool wireframe = false;
 glm::mat4 projection;
@@ -28,7 +28,7 @@ glm::mat4 view;
 glm::mat4 model;
 
 bool lightswitch = true;
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(0.0f, 2.0f, 4.0f);
 glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
 GLShader shader;
@@ -138,22 +138,15 @@ int OpenGL::UseGLAD()
 	return 0;
 }
 
-/*
-	Function: Initialize IMGUI
-	Params:		None
-	Return:
-		-1:		Something failed
-		0:		IMGUI settings settled successfully
-*/
 int OpenGL::UseIMGUI()
 {
-	// IMGUI_CHECKVERSION();
-	// ImGui::CreateContext();
-	// ImGuiIO &io = ImGui::GetIO();
-	// (void)io;
-	// ImGui::StyleColorsDark();
-	// ImGui_ImplGlfw_InitForOpenGL(window, true);
-	// ImGui_ImplOpenGL3_Init("#version 460");
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO();
+	(void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 460");
 
 	return 0;
 }
@@ -181,9 +174,18 @@ void OpenGL::DumpInfo()
 
 void OpenGL::RenderLoop()
 {
-	MeshLoader loader;
-	// loader.loadMesh(obj_path + "3dmeshes/Dragon.obj");
-	loader.loadMesh(obj_path + "cube.obj");
+	std::vector<const char *> paths_list;
+	std::vector<std::string> paths = get_obj_paths(obj_path);
+
+	for (int i = 0; i < paths.size(); i++)
+	{
+		MeshLoader mesh = MeshLoader(paths[i]);
+		meshes.push_back(mesh);
+		paths_list.push_back(paths[i].c_str());
+	}
+
+	int selectedMesh = 0;
+	bool my_tool_active = true;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -209,9 +211,9 @@ void OpenGL::RenderLoop()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		// IMGUI
-		// ImGui_ImplOpenGL3_NewFrame();
-		// ImGui_ImplGlfw_NewFrame();
-		// ImGui::NewFrame();
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		// shader program
 		shader.use();
@@ -235,42 +237,59 @@ void OpenGL::RenderLoop()
 		shader.setVec3("light.specular", lightSpecular);
 
 		// IMGUI
-		// ImGui::Begin("Settings");
-		// ImGui::SetWindowPos(ImVec2(10, 10));
-		// ImGui::SetWindowSize(ImVec2(400, 500));
-		// ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		// ImGui::Checkbox("Wireframe", &wireframe);
-		// ImGui::ColorEdit3("Light Color", (float *)&lightColor);
+		ImGui::Begin("Settings");
 
-		// if (ImGui::Button("Add Texture"))
-		// {
-		// 	ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*", ".");
-		// }
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Open..", "Ctrl+O"))
+			{ /* Do stuff */
+			}
+			if (ImGui::MenuItem("Save", "Ctrl+S"))
+			{ /* Do stuff */
+			}
+			if (ImGui::MenuItem("Close", "Ctrl+W"))
+			{
+				my_tool_active = false;
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
 
-		// // display
-		// if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-		// {
-		// 	// action if OK
-		// 	if (ImGuiFileDialog::Instance()->IsOk())
-		// 	{
-		// 		std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-		// 		std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-		// 		// action
-		// 		std::cout << "File Path: " << filePath << std::endl;
-		// 		std::cout << "File Path Name: " << filePathName << std::endl;
-		// 	}
+		ImGui::SetWindowPos(ImVec2(10, 10));
+		ImGui::SetWindowSize(ImVec2(400, 300));
+		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Checkbox("Wireframe", &wireframe);
+		// ImGui::ListBox("Mesh", &selectedMesh, paths_list, meshes.size());
 
-		// 	// close
-		// 	ImGuiFileDialog::Instance()->Close();
-		// }
+		if (ImGui::Button("Add Texture"))
+		{
+			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*", ".");
+		}
+
+		// display
+		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+		{
+			// action if OK
+			if (ImGuiFileDialog::Instance()->IsOk())
+			{
+				std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+				std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+				// action
+				std::cout << "File Path: " << filePath << std::endl;
+				std::cout << "File Path Name: " << filePathName << std::endl;
+			}
+
+			// close
+			ImGuiFileDialog::Instance()->Close();
+		}
+
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// Mesh painting
-		loader.paintMesh();
-
-		// ImGui::End();
-
-		// ImGui::Render();
-		// ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		meshes[selectedMesh].paintMesh();
 
 		// refresh
 		glfwSwapBuffers(window); // swap buffers
@@ -278,9 +297,9 @@ void OpenGL::RenderLoop()
 	}
 
 	// shut down IMGUI
-	// ImGui_ImplOpenGL3_Shutdown();
-	// ImGui_ImplGlfw_Shutdown();
-	// ImGui::DestroyContext();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	shader.del();
 	glfwDestroyWindow(window);

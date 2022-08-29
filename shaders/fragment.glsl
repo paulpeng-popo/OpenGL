@@ -28,5 +28,5 @@ void main ()
 	vec3 specular = light.specular * spec;
 
 	vec3 color = ambient + diffuse + specular;
-	FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	FragColor = vec4(color, 1.0);
 }

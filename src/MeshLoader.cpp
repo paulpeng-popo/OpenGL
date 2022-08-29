@@ -3,6 +3,11 @@
 
 MeshLoader::MeshLoader() {}
 
+MeshLoader::MeshLoader(std::string file)
+{
+    loadMesh(file);
+}
+
 MeshLoader::~MeshLoader() {}
 
 void MeshLoader::loadMesh(std::string file)
