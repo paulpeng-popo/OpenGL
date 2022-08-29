@@ -172,20 +172,21 @@ void OpenGL::DumpInfo()
 	DEBUG("GL_SHADING_LANGUAGE_VERSION: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 }
 
+bool VectorOfStringGetter(void *data, int n, const char **out_text)
+{
+	const std::vector<std::string> *v = (std::vector<std::string> *)data;
+	std::string str = (*v)[n];
+	*out_text = str.c_str();
+	return true;
+}
+
 void OpenGL::RenderLoop()
 {
-	std::vector<const char *> paths_list;
 	std::vector<std::string> paths = get_obj_paths(obj_path);
 
-	for (int i = 0; i < paths.size(); i++)
-	{
-		MeshLoader mesh = MeshLoader(paths[i]);
-		meshes.push_back(mesh);
-		paths_list.push_back(paths[i].c_str());
-	}
-
-	int selectedMesh = 0;
-	bool my_tool_active = true;
+	int size = paths.size();
+	int selectedMesh = 5;
+	MeshLoader mesh(paths[selectedMesh]);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -238,28 +239,12 @@ void OpenGL::RenderLoop()
 
 		// IMGUI
 		ImGui::Begin("Settings");
-
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("Open..", "Ctrl+O"))
-			{ /* Do stuff */
-			}
-			if (ImGui::MenuItem("Save", "Ctrl+S"))
-			{ /* Do stuff */
-			}
-			if (ImGui::MenuItem("Close", "Ctrl+W"))
-			{
-				my_tool_active = false;
-			}
-			ImGui::EndMenu();
-		}
-		ImGui::EndMenuBar();
-
 		ImGui::SetWindowPos(ImVec2(10, 10));
 		ImGui::SetWindowSize(ImVec2(400, 300));
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Checkbox("Wireframe", &wireframe);
-		// ImGui::ListBox("Mesh", &selectedMesh, paths_list, meshes.size());
+		ImGui::ListBox("Mesh", &selectedMesh, VectorOfStringGetter, &paths, size);
+		ImGui::Text("Index %d", selectedMesh);
 
 		if (ImGui::Button("Add Texture"))
 		{
@@ -289,7 +274,7 @@ void OpenGL::RenderLoop()
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// Mesh painting
-		meshes[selectedMesh].paintMesh();
+		mesh.paintMesh();
 
 		// refresh
 		glfwSwapBuffers(window); // swap buffers
