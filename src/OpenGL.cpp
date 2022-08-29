@@ -20,16 +20,14 @@ std::string fs_path = "shaders/fragment.glsl";
 std::string obj_path = "objects/3dmeshes/";
 
 // Camera
-Camera camera(glm::vec3(0.0f, 0.0f, 4.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 8.0f));
 
 bool wireframe = false;
+bool zoomMode = false;
+
 glm::mat4 projection;
 glm::mat4 view;
-glm::mat4 model;
-
-bool lightswitch = true;
-glm::vec3 lightPos(0.0f, 2.0f, 4.0f);
-glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+glm::mat4 model = glm::mat4(1.0f);
 
 GLShader shader;
 GLFWwindow *window;
@@ -156,6 +154,8 @@ void OpenGL::InitDefault()
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	shader = GLShader(vs_path, fs_path);
 
+	model = glm::mat4(1.0f);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	// glEnable(GL_CULL_FACE);
@@ -186,9 +186,11 @@ void OpenGL::RenderLoop()
 	std::vector<std::string> paths = get_obj_paths(obj_path);
 
 	int size = paths.size();
-	int selectedMesh = 5;
+	int selectedMesh = 3;
 	int selected = selectedMesh;
 	MeshLoader mesh(paths[selectedMesh]);
+
+	float x = 0.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -196,6 +198,15 @@ void OpenGL::RenderLoop()
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+
+		camera.ProcessMouseMovement(0.01f, 0.0f);
+		x += 0.01f;
+
+		if (x >= 90.0f)
+		{
+			camera.ProcessMouseMovement(0.0f, 0.01f);
+		}
+		std::cout << "x: " << x << std::endl;
 
 		// error checker
 		glCheckError();
@@ -227,14 +238,15 @@ void OpenGL::RenderLoop()
 
 		shader.setMat4("projection", projection);
 		shader.setMat4("view", view);
-		shader.setMat4("model", glm::mat4(1.0f));
+		shader.setMat4("model", model);
 
 		// light
+		glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 		glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
 		glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
 		glm::vec3 lightSpecular = lightColor * glm::vec3(1.0f);
 
-		shader.setVec3("light.position", lightPos);
+		shader.setVec3("light.position", camera.Position);
 		shader.setVec3("light.ambient", lightAmbient);
 		shader.setVec3("light.diffuse", lightDiffuse);
 		shader.setVec3("light.specular", lightSpecular);
@@ -244,6 +256,8 @@ void OpenGL::RenderLoop()
 		{
 			mesh.loadMesh(paths[selectedMesh]);
 			selected = selectedMesh;
+			camera.Reset();
+			model = glm::mat4(1.0f);
 		}
 
 		mesh.paintMesh();
@@ -254,6 +268,7 @@ void OpenGL::RenderLoop()
 		ImGui::SetWindowSize(ImVec2(400, 300));
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Checkbox("Wireframe", &wireframe);
+		ImGui::Checkbox("Zoom Mode", &zoomMode);
 		ImGui::ListBox("Mesh", &selectedMesh, VectorOfStringGetter, &paths, size);
 
 		if (ImGui::Button("Add Texture"))

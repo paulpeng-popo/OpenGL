@@ -19,7 +19,7 @@ enum Camera_Movement
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 0.005f;
-const float SENSITIVITY = 0.1f;
+const float SENSITIVITY = 0.001f;
 const float ZOOM = 45.0f;
 
 class Camera
@@ -31,6 +31,8 @@ public:
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
+
+    glm::vec3 OriginPosition;
 
     // euler Angles
     float Yaw;
@@ -58,8 +60,9 @@ public:
     glm::mat4 GetViewMatrix();
 
     void ProcessKeyboard(Camera_Movement direction, float deltaTime);
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
+    void ProcessMouseMovement(float xoffset, float yoffset);
     void ProcessMouseScroll(float yoffset);
+    void Reset();
 
 private:
     // calculates the front vector from the Camera's (updated) Euler Angles

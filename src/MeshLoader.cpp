@@ -37,7 +37,9 @@ void MeshLoader::loadMesh(std::string file)
             auto point = mesh.point(vertex);
             auto normal = mesh.normal(face);
 
-            vertices.push_back(point);
+            TriMesh::Point p(point[0], -point[2], point[1]);
+
+            vertices.push_back(p);
             normals.push_back(normal);
         }
     }

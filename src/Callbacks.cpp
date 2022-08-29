@@ -12,7 +12,12 @@ float lastY = screen_height / 2.0f;
 
 float clickedX = 0.0f;
 float clickedY = 0.0f;
+
+float transformX = 0.0f;
+float transformY = 0.0f;
+
 bool mouse_click = false;
+bool transform_mode = false;
 
 void resize_callback(GLFWwindow *window, int width, int height)
 {
@@ -23,7 +28,10 @@ void resize_callback(GLFWwindow *window, int width, int height)
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    camera.ProcessMouseScroll(yoffset);
+    if (zoomMode)
+    {
+        camera.ProcessMouseScroll(yoffset);
+    }
 }
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
@@ -48,6 +56,17 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
         clickedX = lastX;
         clickedY = lastY;
     }
+
+    if (transform_mode)
+    {
+        float xoffset = xpos - clickedX;
+        float yoffset = clickedY - ypos;
+
+        // camera.ProcessMouseMovement(xoffset, -yoffset);
+
+        transformX = xpos;
+        transformY = ypos;
+    }
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
@@ -61,6 +80,17 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
     {
         mouse_click = false;
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        transform_mode = true;
+        transformX = lastX;
+        transformY = lastY;
+    }
+    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    {
+        transform_mode = false;
     }
 }
 

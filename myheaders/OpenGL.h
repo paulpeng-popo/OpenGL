@@ -40,10 +40,10 @@ void processInput(GLFWwindow *window);
 extern GLFWwindow *window;
 extern Camera camera;
 extern float deltaTime;
-extern float lastX;
-extern float lastY;
 extern int screen_width;
 extern int screen_height;
+extern bool zoomMode;
+extern glm::mat4 model;
 
 class OpenGL
 {
