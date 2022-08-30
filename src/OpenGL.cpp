@@ -38,7 +38,6 @@ bool cursor_lock = true;
 float lastX;
 float lastY;
 
-bool wireframe = false;
 bool walking = false;
 glm::vec4 bgColor = glm::vec4(0.2f, 0.3f, 0.3f, 1.0f); // gray-green
 
@@ -227,6 +226,12 @@ void OpenGL::InitDefault()
 	startTime = 0.0f;
 	actionFreq = 0.01f;
 
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1, &quadVBO);
 	glBindVertexArray(quadVAO);
@@ -237,28 +242,27 @@ void OpenGL::InitDefault()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
 
-	// screen_shader.use();
-	// screen_shader.setInt("screenTexture", 0);
-
 	glGenFramebuffers(1, &framebuffer);
+	glGenTextures(1, &textureColorbuffer);
+	glGenRenderbuffers(1, &renderbuffer);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-	glGenTextures(1, &textureColorbuffer);
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_width, screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screen_width, screen_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glGenRenderbuffers(1, &renderbuffer);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+
 	glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screen_width, screen_height);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		std::cout << "[ERROR] Framebuffer not complete!" << std::endl;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -302,23 +306,20 @@ void OpenGL::RenderLoop()
 		lastFrame = currentFrame;
 
 		// error checker
-		glCheckError();
+		// glCheckError();
 
 		// input
 		processInput(window);
 
 		// render
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glEnable(GL_TEXTURE_2D);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 
 		glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// polygon mode
-		if (wireframe)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		else
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		// IMGUI
 		ImGui_ImplOpenGL3_NewFrame();
@@ -385,7 +386,6 @@ void OpenGL::RenderLoop()
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Checkbox("IsWalk", &walking);
 		ImGui::SliderFloat("Walk Speed", &actionFreq, 0.0f, 1.0f);
-		ImGui::Checkbox("Wireframe", &wireframe);
 		ImGui::Checkbox("Light Switch", &lightswitch);
 		ImGui::ColorEdit3("Light Color", (float *)&lightColor);
 		ImGui::InputFloat3("Light Position", (float *)&lightPos);
@@ -421,6 +421,12 @@ void OpenGL::RenderLoop()
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		// refresh
 		glfwSwapBuffers(window); // swap buffers
 		glfwPollEvents();		 // poll IO events (keys pressed/released, mouse moved etc.)
@@ -432,5 +438,6 @@ void OpenGL::RenderLoop()
 	ImGui::DestroyContext();
 
 	shader.deleteProgram();
+	screen_shader.deleteProgram();
 	glfwDestroyWindow(window);
 }

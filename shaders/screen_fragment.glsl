@@ -19,7 +19,7 @@ void main()
         vec2 intXY = vec2(TexCoords.x*TexSize.x, TexCoords.y*TexSize.y);
         vec2 XYMosaic = vec2(floor(intXY.x/mosaicSize.x)*mosaicSize.x, floor(intXY.y/mosaicSize.y)*mosaicSize.y);
         vec2 UVMosaic = vec2(XYMosaic.x/TexSize.x, XYMosaic.y/TexSize.y);
-        color = texture2D(screenTexture, UVMosaic);
+        color = texture(screenTexture, UVMosaic);
     }
     else
     {
