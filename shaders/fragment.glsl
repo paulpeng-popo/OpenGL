@@ -20,6 +20,10 @@ struct Light {
 uniform Material material;
 uniform Light light;
 uniform vec3 cameraPosition;
+uniform bool grayScale;
+uniform bool mosaic;
+
+const float mosaicSize = 16.0;
 
 out vec4 FragColor;
 
@@ -41,5 +45,15 @@ void main ()
     vec3 specular = light.specular * spec * material.specular;
 
     vec3 result = ambient + diffuse + specular;
-    FragColor = vec4(result, 1.0);
+	float luminance = 0.2126 * result.r + 0.7152 * result.g + 0.0722 * result.b;
+	
+	FragColor = vec4(result, 1.0);
+
+	if (grayScale) {
+		FragColor = vec4(luminance, luminance, luminance, 1.0);
+	}
+
+	if (mosaic) {
+		FragColor.rgb = FragColor.rgb * (1.0 - (mod(gl_FragCoord.x, mosaicSize) + mod(gl_FragCoord.y, mosaicSize)) / (2.0 * mosaicSize));
+	}
 }

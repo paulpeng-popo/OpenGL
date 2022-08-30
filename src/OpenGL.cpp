@@ -24,6 +24,8 @@ Camera camera(glm::vec3(0.0f, 0.0f, 8.0f));
 
 bool wireframe = false;
 bool zoomMode = false;
+bool grayMode = false;
+bool mosaicMode = false;
 
 glm::mat4 projection;
 glm::mat4 view;
@@ -255,6 +257,10 @@ void OpenGL::RenderLoop()
 		shader.setVec3("material.specular", materialSpecular);
 		shader.setFloat("material.shininess", materialShininess);
 
+		// switch
+		shader.setBool("grayScale", grayMode);
+		shader.setBool("mosaic", mosaicMode);
+
 		// Mesh painting
 		if (selectedMesh != selected)
 		{
@@ -273,6 +279,8 @@ void OpenGL::RenderLoop()
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Checkbox("Wireframe", &wireframe);
 		ImGui::Checkbox("Zoom Mode", &zoomMode);
+		ImGui::Checkbox("Gray Scale", &grayMode);
+		ImGui::Checkbox("Mosaic", &mosaicMode);
 		ImGui::ListBox("Mesh", &selectedMesh, VectorOfStringGetter, &paths, size);
 
 		if (ImGui::Button("Add Texture"))
