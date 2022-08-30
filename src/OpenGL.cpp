@@ -17,12 +17,19 @@
 
 std::string vs_path = "shaders/vertex.glsl";
 std::string fs_path = "shaders/fragment.glsl";
+std::string screen_vs_path = "shaders/screen_vertex.glsl";
+std::string screen_fs_path = "shaders/screen_fragment.glsl";
 std::string obj_path = "objects/robot/";
 
 GLShader shader;
 GLFWwindow *window;
 int screen_width;
 int screen_height;
+
+GLShader screen_shader;
+GLuint framebuffer;
+GLuint textureColorbuffer;
+GLuint renderbuffer;
 
 // Camera
 Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
@@ -52,6 +59,20 @@ glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
 bool onlymaterial = false;
 bool textureswitch = true;
+bool mosiac = false;
+
+GLuint quadVAO, quadVBO;
+
+float quadVertices[] = {
+	// vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+	// positions   // texCoords
+	-1.0f, 1.0f, 0.0f, 1.0f,
+	-1.0f, -1.0f, 0.0f, 0.0f,
+	1.0f, -1.0f, 1.0f, 0.0f,
+
+	-1.0f, 1.0f, 0.0f, 1.0f,
+	1.0f, -1.0f, 1.0f, 0.0f,
+	1.0f, 1.0f, 1.0f, 1.0f};
 
 // find out the path of all objecs in the directory
 std::vector<std::string> get_obj_paths(std::string directory)
@@ -196,6 +217,7 @@ void OpenGL::InitDefault()
 {
 	glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
 	shader = GLShader(vs_path, fs_path);
+	screen_shader = GLShader(screen_vs_path, screen_fs_path);
 
 	std::cout << "[INFO] Shader program: " << shader.getProgram() << std::endl;
 
@@ -205,9 +227,40 @@ void OpenGL::InitDefault()
 	startTime = 0.0f;
 	actionFreq = 0.01f;
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glEnable(GL_CULL_FACE);
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+
+	// screen_shader.use();
+	// screen_shader.setInt("screenTexture", 0);
+
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+	glGenTextures(1, &textureColorbuffer);
+	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screen_width, screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glGenRenderbuffers(1, &renderbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, screen_width, screen_height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 /*
@@ -255,6 +308,9 @@ void OpenGL::RenderLoop()
 		processInput(window);
 
 		// render
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glEnable(GL_DEPTH_TEST);
+
 		glClearColor(bgColor.x, bgColor.y, bgColor.z, bgColor.w);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -309,6 +365,19 @@ void OpenGL::RenderLoop()
 			shader.setMat4("model", model[i]);
 		}
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		screen_shader.use();
+		glBindVertexArray(quadVAO);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer); // use the color attachment texture as the texture of the quad plane
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		screen_shader.setBool("is_blur", mosiac);
+
 		// IMGUI
 		ImGui::Begin("Settings");
 		ImGui::SetWindowPos(ImVec2(10, 10));
@@ -323,6 +392,7 @@ void OpenGL::RenderLoop()
 		ImGui::ColorEdit4("Background Color", (float *)&bgColor);
 		ImGui::Checkbox("Texture Switch", &textureswitch);
 		ImGui::Checkbox("Only Material", &onlymaterial);
+		ImGui::Checkbox("Mosiac", &mosiac);
 
 		if (ImGui::Button("Add Texture"))
 		{
