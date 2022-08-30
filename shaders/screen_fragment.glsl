@@ -7,7 +7,7 @@ in vec2 TexCoords;
 uniform sampler2D screenTexture;
 uniform bool is_blur;
 
-const vec2 TexSize = vec2(900, 1500);
+const vec2 TexSize = vec2(400, 400);
 const vec2 mosaicSize = vec2(4.0, 4.0);
 
 void main()
