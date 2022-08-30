@@ -34,6 +34,27 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
     }
 }
 
+void Decompose(glm::mat4 m, glm::mat4 &t, glm::mat4 &r)
+{
+    glm::mat4 I4 = glm::mat4(1.0f); // Identity
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        for (unsigned int j = 0; j < 4; j++)
+        {
+            if (i == 3 || j == 3)
+            {
+                r[i][j] = I4[i][j];
+                t[i][j] = m[i][j];
+            }
+            else
+            {
+                r[i][j] = m[i][j];
+                t[i][j] = I4[i][j];
+            }
+        }
+    }
+}
+
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
     lastX = xpos;
@@ -45,13 +66,13 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
         float yoffset = clickedY - ypos;
 
         if (yoffset < 0)
-            camera.ProcessKeyboard(UPWARD, abs(yoffset));
+            camera.ProcessMouseMove(UPWARD, abs(yoffset));
         if (yoffset > 0)
-            camera.ProcessKeyboard(DOWNWARD, abs(yoffset));
+            camera.ProcessMouseMove(DOWNWARD, abs(yoffset));
         if (xoffset > 0)
-            camera.ProcessKeyboard(LEFT, abs(xoffset));
+            camera.ProcessMouseMove(LEFT, abs(xoffset));
         if (xoffset < 0)
-            camera.ProcessKeyboard(RIGHT, abs(xoffset));
+            camera.ProcessMouseMove(RIGHT, abs(xoffset));
 
         clickedX = lastX;
         clickedY = lastY;
@@ -59,10 +80,19 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
     if (transform_mode)
     {
-        float xoffset = xpos - clickedX;
-        float yoffset = clickedY - ypos;
+        float xoffset = xpos - transformX;
+        float yoffset = (ypos - transformY);
 
-        // camera.ProcessMouseMovement(xoffset, -yoffset);
+        glm::mat4 rotX = glm::rotate(glm::mat4(1.0f), glm::radians(xoffset), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 rotY = glm::rotate(glm::mat4(1.0f), glm::radians(yoffset), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        glm::mat4 viewT, viewR;
+        Decompose(view, viewT, viewR);
+
+        glm::mat4 modelT, modelR;
+        Decompose(model, modelT, modelR);
+
+        model = modelT * glm::inverse(viewR) * rotX * rotY * viewR * modelR;
 
         transformX = xpos;
         transformY = ypos;

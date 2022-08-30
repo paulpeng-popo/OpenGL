@@ -19,7 +19,7 @@ enum Camera_Movement
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 0.005f;
-const float SENSITIVITY = 0.001f;
+const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
 class Camera
@@ -59,8 +59,8 @@ public:
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
     glm::mat4 GetViewMatrix();
 
-    void ProcessKeyboard(Camera_Movement direction, float deltaTime);
-    void ProcessMouseMovement(float xoffset, float yoffset);
+    void ProcessMouseMove(Camera_Movement direction, float deltaTime);
+    void ProcessMouseRotate(float xoffset, float yoffset);
     void ProcessMouseScroll(float yoffset);
     void Reset();
 

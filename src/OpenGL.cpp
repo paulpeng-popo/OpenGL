@@ -190,23 +190,12 @@ void OpenGL::RenderLoop()
 	int selected = selectedMesh;
 	MeshLoader mesh(paths[selectedMesh]);
 
-	float x = 0.0f;
-
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-
-		camera.ProcessMouseMovement(0.01f, 0.0f);
-		x += 0.01f;
-
-		if (x >= 90.0f)
-		{
-			camera.ProcessMouseMovement(0.0f, 0.01f);
-		}
-		std::cout << "x: " << x << std::endl;
 
 		// error checker
 		glCheckError();
@@ -233,7 +222,7 @@ void OpenGL::RenderLoop()
 		shader.use();
 
 		// view matrix and projection matrix
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 1000.0f);
 		view = camera.GetViewMatrix();
 
 		shader.setMat4("projection", projection);
@@ -242,14 +231,29 @@ void OpenGL::RenderLoop()
 
 		// light
 		glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+		glm::vec3 lightDirection(-0.2f, -1.0f, -0.3f);
+
 		glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
 		glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
 		glm::vec3 lightSpecular = lightColor * glm::vec3(1.0f);
 
-		shader.setVec3("light.position", camera.Position);
+		shader.setVec3("light.direction", lightDirection);
 		shader.setVec3("light.ambient", lightAmbient);
 		shader.setVec3("light.diffuse", lightDiffuse);
 		shader.setVec3("light.specular", lightSpecular);
+
+		shader.setVec3("cameraPosition", camera.Position);
+
+		// material
+		glm::vec3 materialAmbient = glm::vec3(1.0f, 0.5f, 0.31f);
+		glm::vec3 materialDiffuse = glm::vec3(1.0f, 0.5f, 0.31f);
+		glm::vec3 materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
+		float materialShininess = 32.0f;
+
+		shader.setVec3("material.ambient", materialAmbient);
+		shader.setVec3("material.diffuse", materialDiffuse);
+		shader.setVec3("material.specular", materialSpecular);
+		shader.setFloat("material.shininess", materialShininess);
 
 		// Mesh painting
 		if (selectedMesh != selected)

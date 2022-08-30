@@ -43,7 +43,9 @@ extern float deltaTime;
 extern int screen_width;
 extern int screen_height;
 extern bool zoomMode;
+
 extern glm::mat4 model;
+extern glm::mat4 view;
 
 class OpenGL
 {
