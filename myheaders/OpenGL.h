@@ -21,8 +21,6 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Camera.h"
-
 #define deg2rad(x) ((x) * ((3.1415926f) / (180.0f)))
 #define rad2deg(x) ((180.0f) / ((x) * (3.1415926f)))
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
@@ -38,13 +36,6 @@ void processInput(GLFWwindow *window);
 extern GLFWwindow *window;
 extern int screen_width;
 extern int screen_height;
-extern Camera camera;
-extern float lastX;
-extern float lastY;
-extern bool firstMouse;
-extern bool cursor_lock;
-extern float deltaTime;
-extern bool lightswitch;
 
 class OpenGL
 {

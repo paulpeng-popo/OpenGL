@@ -38,8 +38,8 @@ build: clean
 		@ copy %%s $(BUILD_DIR) > NUL
 	@ for %%s in $(BUILD_SRC); do \
 		@ xcopy %%s $(BUILD_DIR)\\%%s /E/H/C/I/Y /EXCLUDE:except.txt > NUL
-	@ copy $(IMGUI_CONFIG) . > NUL
-	@ copy $(IMGUI_CONFIG) $(BUILD_DIR) > NUL
+	@ if exist $(IMGUI_CONFIG) copy $(IMGUI_CONFIG) . > NUL
+	@ if exist $(IMGUI_CONFIG) copy $(IMGUI_CONFIG) $(BUILD_DIR) > NUL
 
 $(EXECUTABLE): $(ALL_CPP)
 	@ echo [INFO] Compiling source codes ...
