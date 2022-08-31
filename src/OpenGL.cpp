@@ -93,7 +93,7 @@ int OpenGL::UseGLFW()
 	}
 
 	glfwMakeContextCurrent(window);
-	glfwSetWindowPos(window, 50, 50);
+	glfwSetWindowPos(window, 0, 0);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	// glfwSetCursorPosCallback(window, mouse_callback);
 	// glfwSetScrollCallback(window, scroll_callback);
@@ -232,6 +232,8 @@ void OpenGL::RenderLoop()
 
 		// shader program
 		shader.use();
+		glUniform2fv(glGetUniformLocation(shader.getProgram(), "resolution"), 1, glm::value_ptr(glm::vec2(screen_width, screen_height)));
+		shader.setFloat("time", currentFrame);
 
 		// render objects
 		glBindVertexArray(VAO);

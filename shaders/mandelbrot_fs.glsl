@@ -1,64 +1,44 @@
 #version 460 core
 
-// out vec4 FragColor;
-
-// uniform vec2 resolution;
-
-// void main()
-// {
-//     vec2 uv = (gl_FragCoord.xy - 0.5 * resolution) / resolution.y;
-//     vec3 color = vec3(0.0);
-
-//     color.xy += uv;
-
-//     FragColor = vec4(color, 1.0);
-// }
-
 in vec4 gl_FragCoord;
- 
+
 out vec4 FragColor;
- 
-#define MAX_ITERATIONS 500
- 
-int get_iterations()
+
+uniform vec2 resolution;
+uniform float time;
+
+float mandelbrot(vec2 uv, int max_iter)
 {
-    float real = ((gl_FragCoord.x / 800.0 - 0.5) ) * 5.0;
-    float imag = ((gl_FragCoord.y / 800.0 - 0.5) ) * 5.0;
- 
-    int iterations = 0;
-    float const_real = real;
-    float const_imag = imag;
- 
-    while (iterations < MAX_ITERATIONS)
+    vec2 c = 4.0 * uv - vec2(0.7, 0.0);
+    c = c / pow(time, 7.0) - vec2(0.65, 0.45);
+    vec2 z = vec2(0.0, 0.0);
+
+    for (int i = 0; i < max_iter; i++)
     {
-        float tmp_real = real;
-        real = (real * real - imag * imag) + const_real;
-        imag = (2.0 * tmp_real * imag) + const_imag;
-         
-        float dist = real * real + imag * imag;
-         
-        if (dist > 4.0)
-        break;
- 
-        ++iterations;
+        z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+        if (dot(z, z) > 4.0)
+        {
+            return float(i) / float(max_iter);
+        }
     }
-    return iterations;
+    return 0.0;
 }
- 
-vec4 return_color()
+
+vec3 hash13(float n)
 {
-    int iter = get_iterations();
-    if (iter == MAX_ITERATIONS)
-    {
-        gl_FragDepth = 0.0f;
-        return vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    }
- 
-    float iterations = float(iter) / MAX_ITERATIONS;    
-    return vec4(0.0f, iterations, 0.0f, 1.0f);
+    vec3 p = vec3(0.0, 0.0, 0.0);
+    p.x = fract(sin(n) * 5625.246);
+    p.y = fract(sin(n+p.x) * 2216.486);
+    p.z = fract(sin(p.x+p.y) * 8276.352);
+    return p;
 }
- 
+
 void main()
 {
-    FragColor = return_color();
+    vec2 uv = (gl_FragCoord.xy - 0.5 * resolution.xy) / resolution.y;
+    vec3 color = vec3(0.0);
+
+    color += hash13(mandelbrot(uv, 4096));
+
+    FragColor = vec4(color, 1.0);
 }

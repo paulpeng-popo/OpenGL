@@ -16,7 +16,7 @@ ALL_DLL := ($(subst /,\\,$(DLLS)))
 
 BUILD_DIR := build
 BUILD_SRC := (shaders objects)
-EXECUTABLE := $(BUILD_DIR)\\robot
+EXECUTABLE := $(BUILD_DIR)\\fractal
 EXEC := .\\$(EXECUTABLE)
 
 
