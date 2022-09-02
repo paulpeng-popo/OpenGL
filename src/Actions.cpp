@@ -90,7 +90,7 @@ vector<mat4> stand(vector<vec3> &translation, vector<vec3> &rotation, vector<vec
     translation[LEFT_FOOT] = vec3(0.0f, -0.4f, -0.05f);
     translation[RIGHT_FOOT] = vec3(0.0f, -0.4f, -0.05f);
 
-    translation[BODY] = glm::vec3(0.0f, 0.0f, -5.0f);
+    // translation[BODY] = glm::vec3(0.0f, 0.0f, -5.0f);
 
     for (int i = 0; i < BODY_PARTS; i++)
     {
@@ -110,20 +110,20 @@ vector<mat4> walk(vector<vec3> &translation, vector<vec3> &rotation, vector<vec3
     float cfunc = 30.0f * cos(startTime);
     float func = 0.003f * cos(2 * (startTime - 1.57f));
 
-    translation[BODY] += glm::vec3(0.0f, func, actionFreq / 3.3f);
+    // translation[BODY] += glm::vec3(0.0f, func, actionFreq / 3.3f);
 
-    if (30.0f - abs(cfunc) <= 0.05f)
-        translation[BODY] += glm::vec3(0.0f, 0.0f, actionFreq / 10.0f);
+    // if (30.0f - abs(cfunc) <= 0.05f)
+    //     translation[BODY] += glm::vec3(0.0f, 0.0f, actionFreq / 10.0f);
 
     if (startTime > 2.0f * glm::pi<float>())
     {
         startTime = 0.0f;
     }
 
-    if (translation[BODY].z > 5.0f)
-    {
-        translation[BODY] = glm::vec3(0.0f, 0.0f, -5.0f);
-    }
+    // if (translation[BODY].z > 5.0f)
+    // {
+    //     translation[BODY] = glm::vec3(0.0f, 0.0f, -5.0f);
+    // }
 
     rotation[LEFT_UPPER_ARM] = vec3(cfunc, 0.0f, 0.0f);
     rotation[LEFT_LOWER_ARM] = vec3(cfunc, 0.0f, 0.0f);

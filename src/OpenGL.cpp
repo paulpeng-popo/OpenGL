@@ -32,9 +32,9 @@ GLuint textureColorbuffer;
 GLuint renderbuffer;
 
 // Camera
-Camera camera(glm::vec3(0.0f, 2.0f, 3.0f));
-bool firstMouse = true;
-bool cursor_lock = true;
+Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
+// bool firstMouse = true;
+// bool cursor_lock = true;
 float lastX;
 float lastY;
 
@@ -157,7 +157,7 @@ int OpenGL::UseGLFW()
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE); // key will be held down in a range of time
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwSetCursorPos(window, width / 2, height / 2);
 	lastX = (float)width / 2.0f;
@@ -290,6 +290,12 @@ void OpenGL::DumpInfo()
 */
 void OpenGL::RenderLoop()
 {
+	GLbyte color[4];
+	GLfloat depth;
+	GLuint index;
+
+	int test = 0;
+
 	std::vector<ModelLoader> objects;
 	std::vector<std::string> paths = get_obj_paths(obj_path);
 
@@ -330,7 +336,9 @@ void OpenGL::RenderLoop()
 		shader.use();
 
 		// view matrix and projection matrix
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
+		float ratio = (float)screen_width / (float)screen_height;
+		projection = glm::perspective(glm::radians(camera.Zoom), ratio, 0.1f, 100.0f);
+		// projection = glm::ortho(-ratio, ratio, -1.0f, 1.0f, 0.1f, 100.0f);
 		view = camera.GetViewMatrix();
 
 		shader.setMat4("camera.projection", projection);
@@ -365,6 +373,30 @@ void OpenGL::RenderLoop()
 			// model matrix
 			shader.setMat4("model", model[i]);
 		}
+
+		// test = 0;
+
+		// for (int i = 0; i < screen_width; i++)
+		// {
+		// 	for (int j = 0; j < screen_height; j++)
+		// 	{
+		// 		glm::vec3 color = glm::vec3(0.0f);
+		// 		glReadPixels(i, j, 1, 1, GL_RGB, GL_FLOAT, &color);
+		// 		if (color != glm::vec3(0.0f))
+		// 		{
+		// 			test++;
+		// 		}
+		// 	}
+		// }
+
+		// std::cout << test << std::endl;
+
+		// glReadPixels(lastX, screen_height - lastY - 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
+		// glReadPixels(lastX, screen_height - lastY - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+		// glReadPixels(lastX, screen_height - lastY - 1, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
+
+		// printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
+		// 	   (int)lastX, (int)lastY, color[0], color[1], color[2], color[3], depth, index);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
