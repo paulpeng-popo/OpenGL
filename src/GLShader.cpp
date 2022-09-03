@@ -58,13 +58,13 @@ GLuint GLShader::CreateShader(const GLchar *vertexCode, const GLchar *fragmentCo
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
     std::cout << "[INFO] Compiling vertex shader ..." << std::endl;
-    
+
     glShaderSource(vertexShader, 1, &vertexCode, NULL);
     glCompileShader(vertexShader);
     CheckCompileErrors(vertexShader, "VERTEX");
 
     std::cout << "[INFO] Compiling fragment shader ..." << std::endl;
-    
+
     glShaderSource(fragmentShader, 1, &fragmentCode, NULL);
     glCompileShader(fragmentShader);
     CheckCompileErrors(fragmentShader, "FRAGMENT");
@@ -75,10 +75,10 @@ GLuint GLShader::CreateShader(const GLchar *vertexCode, const GLchar *fragmentCo
     glAttachShader(program, fragmentShader);
     glLinkProgram(program);
     CheckCompileErrors(program, "PROGRAM");
-    
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-    
+
     return program;
 }
 
@@ -123,6 +123,11 @@ void GLShader::setMat4(const std::string &name, glm::mat4 value) const
 void GLShader::setVec3(const std::string &name, glm::vec3 value) const
 {
     glUniform3fv(glGetUniformLocation(Program, name.c_str()), 1, &value[0]);
+}
+
+void GLShader::setVec4(const std::string &name, glm::vec4 value) const
+{
+    glUniform4fv(glGetUniformLocation(Program, name.c_str()), 1, &value[0]);
 }
 
 void GLShader::setFloat(const std::string &name, float value) const

@@ -32,8 +32,8 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 */
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    // if (cursor_lock)
-    camera.ProcessMouseScroll(yoffset);
+    if (cursor_lock)
+        camera.ProcessMouseScroll(yoffset);
 }
 
 /*
@@ -46,24 +46,24 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 */
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-    // if (firstMouse)
-    // {
-    //     lastX = xpos;
-    //     lastY = ypos;
-    //     firstMouse = false;
-    // }
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
 
-    // if (cursor_lock)
-    // {
-    //     float xoffset = xpos - lastX;
-    //     float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-    //     lastX = xpos;
-    //     lastY = ypos;
-    //     camera.ProcessMouseMovement(xoffset, yoffset);
-    // }
+    if (cursor_lock)
+    {
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+        lastX = xpos;
+        lastY = ypos;
+        camera.ProcessMouseMovement(xoffset, yoffset);
+    }
 
-    lastX = xpos;
-    lastY = ypos;
+    // lastX = xpos;
+    // lastY = ypos;
 
     // std::cout << "xpos: " << xpos << " ypos: " << ypos << std::endl;
     // std::cout << "lastX: " << lastX << " lastY: " << lastY << std::endl;
@@ -82,18 +82,18 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        // if (cursor_lock)
-        // {
-        //     cursor_lock = false;
-        //     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        //     glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
-        // }
-        // else
-        // {
-        //     cursor_lock = true;
-        //     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        //     glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
-        // }
+        if (cursor_lock)
+        {
+            cursor_lock = false;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
+        }
+        else
+        {
+            cursor_lock = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetCursorPos(window, screen_width / 2, screen_height / 2);
+        }
 
         // if (lightswitch)
         // {
@@ -119,14 +119,14 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    //     camera.ProcessKeyboard(FORWARD, deltaTime);
-    // if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    //     camera.ProcessKeyboard(BACKWARD, deltaTime);
-    // if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    //     camera.ProcessKeyboard(LEFT, deltaTime);
-    // if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    //     camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 /*

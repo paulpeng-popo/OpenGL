@@ -31,10 +31,15 @@ GLuint framebuffer;
 GLuint textureColorbuffer;
 GLuint renderbuffer;
 
+GLubyte *colorbuffer;
+int datasize = 0;
+const int PBO_COUNT = 2;
+GLuint pboIds[PBO_COUNT];
+
 // Camera
 Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
-// bool firstMouse = true;
-// bool cursor_lock = true;
+bool firstMouse = true;
+bool cursor_lock = true;
 float lastX;
 float lastY;
 
@@ -157,7 +162,7 @@ int OpenGL::UseGLFW()
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE); // key will be held down in a range of time
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwSetCursorPos(window, width / 2, height / 2);
 	lastX = (float)width / 2.0f;
@@ -165,6 +170,8 @@ int OpenGL::UseGLFW()
 
 	screen_width = width;
 	screen_height = height;
+
+	datasize = width * height * sizeof(GLubyte) * 4;
 
 	return 0;
 }
@@ -219,6 +226,17 @@ void OpenGL::InitDefault()
 	screen_shader = GLShader(screen_vs_path, screen_fs_path);
 
 	std::cout << "[INFO] Shader program: " << shader.getProgram() << std::endl;
+
+	colorbuffer = new GLubyte[datasize];
+	memset(colorbuffer, 255, datasize);
+
+	glGenBuffers(PBO_COUNT, pboIds);
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[0]);
+	glBufferData(GL_PIXEL_PACK_BUFFER, datasize, 0, GL_STREAM_READ);
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[1]);
+	glBufferData(GL_PIXEL_PACK_BUFFER, datasize, 0, GL_STREAM_READ);
+
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
 	model = initial(translation, rotation, scalar);
 	model = stand(translation, rotation, scalar);
@@ -290,11 +308,10 @@ void OpenGL::DumpInfo()
 */
 void OpenGL::RenderLoop()
 {
-	GLbyte color[4];
-	GLfloat depth;
-	GLuint index;
+	int index = 0;
+	int nextIndex = 0;
 
-	int test = 0;
+	glm::vec4 box = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	std::vector<ModelLoader> objects;
 	std::vector<std::string> paths = get_obj_paths(obj_path);
@@ -374,29 +391,45 @@ void OpenGL::RenderLoop()
 			shader.setMat4("model", model[i]);
 		}
 
-		// test = 0;
+		index = (index + 1) % 2;
+		nextIndex = (index + 1) % 2;
 
-		// for (int i = 0; i < screen_width; i++)
-		// {
-		// 	for (int j = 0; j < screen_height; j++)
-		// 	{
-		// 		glm::vec3 color = glm::vec3(0.0f);
-		// 		glReadPixels(i, j, 1, 1, GL_RGB, GL_FLOAT, &color);
-		// 		if (color != glm::vec3(0.0f))
-		// 		{
-		// 			test++;
-		// 		}
-		// 	}
-		// }
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[index]);
+		glReadPixels(0, 0, screen_width, screen_height, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
-		// std::cout << test << std::endl;
+		// initalize the bounding box
+		box[0] = screen_width - 1;
+		box[1] = screen_height - 1;
+		box[2] = 0.0f;
+		box[3] = 0.0f;
 
-		// glReadPixels(lastX, screen_height - lastY - 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
-		// glReadPixels(lastX, screen_height - lastY - 1, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
-		// glReadPixels(lastX, screen_height - lastY - 1, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
+		colorbuffer = (GLubyte *)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 
-		// printf("Clicked on pixel %d, %d, color %02hhx%02hhx%02hhx%02hhx, depth %f, stencil index %u\n",
-		// 	   (int)lastX, (int)lastY, color[0], color[1], color[2], color[3], depth, index);
+		// find the bounding box of the object if its color is not equal to the background color
+		for (int i = 0; i < screen_width; i++)
+		{
+			for (int j = 0; j < screen_height; j++)
+			{
+				if (colorbuffer[(j * screen_width + i) * 4] != bgColor.x * 255 ||
+					colorbuffer[(j * screen_width + i) * 4 + 1] != bgColor.y * 255 ||
+					colorbuffer[(j * screen_width + i) * 4 + 2] != bgColor.z * 255)
+				{
+					if (i < box[0])
+						box[0] = i;
+					if (i > box[2])
+						box[2] = i;
+					if (j < box[1])
+						box[1] = j;
+					if (j > box[3])
+						box[3] = j;
+				}
+			}
+		}
+
+		glUnmapBuffer(GL_PIXEL_PACK_BUFFER); // release pointer to the mapped buffer
+
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -410,6 +443,15 @@ void OpenGL::RenderLoop()
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		screen_shader.setBool("is_blur", mosiac);
+
+		box[0] = box[0] / screen_width;
+		box[1] = box[1] / screen_height;
+		box[2] = box[2] / screen_width;
+		box[3] = box[3] / screen_height;
+
+		std::cout << box[0] << " " << box[1] << " " << box[2] << " " << box[3] << std::endl;
+
+		screen_shader.setVec4("box", box);
 
 		// IMGUI
 		ImGui::Begin("Settings");

@@ -7,8 +7,8 @@
 
 #include "../myheaders/OpenGL.h"
 
-const int WIDTH = 800;
-const int HEIGHT = 800;
+const int WIDTH = 100;
+const int HEIGHT = 100;
 char title[] = "Robot";
 
 int main()
