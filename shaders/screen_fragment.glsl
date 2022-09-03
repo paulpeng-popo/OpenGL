@@ -15,22 +15,15 @@ void main()
 {
     vec4 color;
 
+    color = texture(screenTexture, TexCoords);
+
     if (is_blur)
     {
-        if (TexCoords.x > box.x && TexCoords.y < -(box.y-1) && TexCoords.x < box.z && TexCoords.y > -(box.w-1))
-        {
-            color = texture(screenTexture, TexCoords);
-        }
-        else
+        if (TexCoords.x > box.x && TexCoords.x < box.z && TexCoords.y > box.y && TexCoords.y < box.w)
         {
             vec2 mosaic = floor(TexCoords * TexSize / mosaicSize) * mosaicSize / TexSize;
             color = texture(screenTexture, mosaic);
         }
-        
-    }
-    else
-    {
-        color = texture(screenTexture, TexCoords);
     }
 
     FragColor = color;

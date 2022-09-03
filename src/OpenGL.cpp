@@ -63,7 +63,7 @@ glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
 bool onlymaterial = false;
 bool textureswitch = true;
-bool mosiac = false;
+bool mosaic = false;
 
 GLuint quadVAO, quadVBO;
 
@@ -156,6 +156,7 @@ int OpenGL::UseGLFW()
 
 	glfwMakeContextCurrent(window);
 	glfwSetWindowPos(window, 50, 50);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
@@ -172,6 +173,9 @@ int OpenGL::UseGLFW()
 	screen_height = height;
 
 	datasize = width * height * sizeof(GLubyte) * 4;
+
+	colorbuffer = new GLubyte[datasize];
+	memset(colorbuffer, 255, datasize);
 
 	return 0;
 }
@@ -227,8 +231,11 @@ void OpenGL::InitDefault()
 
 	std::cout << "[INFO] Shader program: " << shader.getProgram() << std::endl;
 
-	colorbuffer = new GLubyte[datasize];
-	memset(colorbuffer, 255, datasize);
+	model = initial(translation, rotation, scalar);
+	model = stand(translation, rotation, scalar);
+
+	startTime = 0.0f;
+	actionFreq = 0.01f;
 
 	glGenBuffers(PBO_COUNT, pboIds);
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[0]);
@@ -237,12 +244,6 @@ void OpenGL::InitDefault()
 	glBufferData(GL_PIXEL_PACK_BUFFER, datasize, 0, GL_STREAM_READ);
 
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
-	model = initial(translation, rotation, scalar);
-	model = stand(translation, rotation, scalar);
-
-	startTime = 0.0f;
-	actionFreq = 0.01f;
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -308,6 +309,7 @@ void OpenGL::DumpInfo()
 */
 void OpenGL::RenderLoop()
 {
+	int blur_pixel = 0;
 	int index = 0;
 	int nextIndex = 0;
 
@@ -391,45 +393,63 @@ void OpenGL::RenderLoop()
 			shader.setMat4("model", model[i]);
 		}
 
-		index = (index + 1) % 2;
-		nextIndex = (index + 1) % 2;
-
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[index]);
-		glReadPixels(0, 0, screen_width, screen_height, GL_BGRA, GL_UNSIGNED_BYTE, 0);
-
-		// initalize the bounding box
-		box[0] = screen_width - 1;
-		box[1] = screen_height - 1;
-		box[2] = 0.0f;
-		box[3] = 0.0f;
-
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
-		colorbuffer = (GLubyte *)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-
-		// find the bounding box of the object if its color is not equal to the background color
-		for (int i = 0; i < screen_width; i++)
+		// mosaic effect
+		if (mosaic)
 		{
-			for (int j = 0; j < screen_height; j++)
+			index = (index + 1) % 2;
+			nextIndex = (index + 1) % 2;
+			blur_pixel = 0;
+
+			glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[index]);
+			glReadPixels(0, 0, screen_width, screen_height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+			// initalize the bounding box
+			box[0] = screen_width - 1;
+			box[1] = screen_height - 1;
+			box[2] = 0.0f;
+			box[3] = 0.0f;
+
+			glBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
+			colorbuffer = (GLubyte *)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+
+			// find the bounding box of the object if its color is not equal to the background color
+			for (int i = 0; i < screen_width; i++)
 			{
-				if (colorbuffer[(j * screen_width + i) * 4] != bgColor.x * 255 ||
-					colorbuffer[(j * screen_width + i) * 4 + 1] != bgColor.y * 255 ||
-					colorbuffer[(j * screen_width + i) * 4 + 2] != bgColor.z * 255)
+				for (int j = 0; j < screen_height; j++)
 				{
-					if (i < box[0])
-						box[0] = i;
-					if (i > box[2])
-						box[2] = i;
-					if (j < box[1])
-						box[1] = j;
-					if (j > box[3])
-						box[3] = j;
+					if ((int)colorbuffer[(j * screen_width + i) * 4] != (int)(bgColor.x * 255) ||
+						(int)colorbuffer[(j * screen_width + i) * 4 + 1] != (int)(bgColor.y * 255) ||
+						(int)colorbuffer[(j * screen_width + i) * 4 + 2] != (int)(bgColor.z * 255) ||
+						(int)colorbuffer[(j * screen_width + i) * 4 + 3] != (int)(bgColor.w * 255))
+					{
+						blur_pixel++;
+
+						if (i < box[0])
+							box[0] = i;
+						if (i > box[2])
+							box[2] = i;
+						if (j < box[1])
+							box[1] = j;
+						if (j > box[3])
+							box[3] = j;
+					}
 				}
 			}
+
+			glUnmapBuffer(GL_PIXEL_PACK_BUFFER); // release pointer to the mapped buffer
+			glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+			box[0] = box[0] / screen_width;
+			box[1] = box[1] / screen_height;
+			box[2] = box[2] / screen_width;
+			box[3] = box[3] / screen_height;
+
+			// std::cout << box[0] << " " << box[1] << " " << box[2] << " " << box[3] << std::endl;
 		}
-
-		glUnmapBuffer(GL_PIXEL_PACK_BUFFER); // release pointer to the mapped buffer
-
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		else
+		{
+			blur_pixel = 0;
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -442,53 +462,47 @@ void OpenGL::RenderLoop()
 		glBindTexture(GL_TEXTURE_2D, textureColorbuffer); // use the color attachment texture as the texture of the quad plane
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		screen_shader.setBool("is_blur", mosiac);
-
-		box[0] = box[0] / screen_width;
-		box[1] = box[1] / screen_height;
-		box[2] = box[2] / screen_width;
-		box[3] = box[3] / screen_height;
-
-		std::cout << box[0] << " " << box[1] << " " << box[2] << " " << box[3] << std::endl;
-
+		screen_shader.setBool("is_blur", mosaic);
 		screen_shader.setVec4("box", box);
 
 		// IMGUI
 		ImGui::Begin("Settings");
 		ImGui::SetWindowPos(ImVec2(10, 10));
-		ImGui::SetWindowSize(ImVec2(400, 500));
 		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Text("Resolution: %d x %d", screen_width, screen_height);
+		ImGui::Text("Total pixels: %d", screen_width * screen_height);
 		ImGui::Checkbox("IsWalk", &walking);
 		ImGui::SliderFloat("Walk Speed", &actionFreq, 0.0f, 1.0f);
-		ImGui::Checkbox("Light Switch", &lightswitch);
-		ImGui::ColorEdit3("Light Color", (float *)&lightColor);
-		ImGui::InputFloat3("Light Position", (float *)&lightPos);
+		// ImGui::Checkbox("Light Switch", &lightswitch);
+		// ImGui::ColorEdit3("Light Color", (float *)&lightColor);
+		// ImGui::InputFloat3("Light Position", (float *)&lightPos);
 		ImGui::ColorEdit4("Background Color", (float *)&bgColor);
-		ImGui::Checkbox("Texture Switch", &textureswitch);
-		ImGui::Checkbox("Only Material", &onlymaterial);
-		ImGui::Checkbox("Mosiac", &mosiac);
+		// ImGui::Checkbox("Texture Switch", &textureswitch);
+		// ImGui::Checkbox("Only Material", &onlymaterial);
+		ImGui::Checkbox("Mosiac", &mosaic);
+		ImGui::Text("Mosaic Pixels: %d", blur_pixel);
 
-		if (ImGui::Button("Add Texture"))
-		{
-			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*", ".");
-		}
+		// if (ImGui::Button("Add Texture"))
+		// {
+		// 	ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*", ".");
+		// }
 
-		// display
-		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-		{
-			// action if OK
-			if (ImGuiFileDialog::Instance()->IsOk())
-			{
-				std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-				std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-				// action
-				std::cout << "File Path: " << filePath << std::endl;
-				std::cout << "File Path Name: " << filePathName << std::endl;
-			}
+		// // display
+		// if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+		// {
+		// 	// action if OK
+		// 	if (ImGuiFileDialog::Instance()->IsOk())
+		// 	{
+		// 		std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+		// 		std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+		// 		// action
+		// 		std::cout << "File Path: " << filePath << std::endl;
+		// 		std::cout << "File Path Name: " << filePathName << std::endl;
+		// 	}
 
-			// close
-			ImGuiFileDialog::Instance()->Close();
-		}
+		// 	// close
+		// 	ImGuiFileDialog::Instance()->Close();
+		// }
 
 		ImGui::End();
 
