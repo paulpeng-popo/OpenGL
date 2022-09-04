@@ -233,7 +233,7 @@ void OpenGL::RenderLoop()
 
 		// light
 		glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-		glm::vec3 lightDirection(-0.2f, -1.0f, -0.3f);
+		glm::vec3 lightDirection(camera.Front.x, camera.Front.y, camera.Front.z);
 
 		glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
 		glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
