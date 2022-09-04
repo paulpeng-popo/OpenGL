@@ -10,14 +10,10 @@
 #include "../myheaders/MeshLoader.h"
 #include "../myheaders/Error_Debug.h"
 
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_impl_glfw.h"
-#include "../imgui/imgui_impl_opengl3.h"
-#include "../imgui/ImGuiFileDialog.h"
-
 std::string vs_path = "shaders/vertex.glsl";
 std::string fs_path = "shaders/fragment.glsl";
 std::string obj_path = "objects/3dmeshes/";
+std::string texture_path = "textures/";
 
 // Camera
 Camera camera(glm::vec3(0.0f, 0.0f, 8.0f));
@@ -25,7 +21,6 @@ Camera camera(glm::vec3(0.0f, 0.0f, 8.0f));
 bool wireframe = false;
 bool zoomMode = false;
 bool grayMode = false;
-bool mosaicMode = false;
 
 glm::mat4 projection;
 glm::mat4 view;
@@ -140,14 +135,7 @@ int OpenGL::UseGLAD()
 
 int OpenGL::UseIMGUI()
 {
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO &io = ImGui::GetIO();
-	(void)io;
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 460");
-
+	gui.init(window);
 	return 0;
 }
 
@@ -160,7 +148,7 @@ void OpenGL::InitDefault()
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	// glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 }
 
 void OpenGL::DumpInfo()
@@ -174,20 +162,66 @@ void OpenGL::DumpInfo()
 	DEBUG("GL_SHADING_LANGUAGE_VERSION: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 }
 
-bool VectorOfStringGetter(void *data, int n, const char **out_text)
+void shaderPass()
 {
-	const std::vector<std::string> *v = (std::vector<std::string> *)data;
-	std::string str = (*v)[n];
-	str = str.substr(str.find_last_of("/\\") + 1);
-	*out_text = str.c_str();
-	return true;
+	shader.use();
+
+	projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 1000.0f);
+	view = camera.GetViewMatrix();
+
+	shader.setMat4("projection", projection);
+	shader.setMat4("view", view);
+	shader.setMat4("model", model);
+
+	// light
+	glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+	glm::vec3 lightDirection1(camera.Front.x, camera.Front.y, camera.Front.z);
+	glm::vec3 lightDirection2(camera.Right.x, camera.Right.y, camera.Right.z);
+	glm::vec3 lightDirection3(camera.Up.x, camera.Up.y, camera.Up.z);
+
+	glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
+	glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
+	glm::vec3 lightSpecular = lightColor * glm::vec3(1.0f);
+
+	shader.setVec3("light1.direction", lightDirection1);
+	shader.setVec3("light2.direction", lightDirection2);
+	shader.setVec3("light3.direction", lightDirection3);
+
+	shader.setVec3("light1.ambient", lightAmbient);
+	shader.setVec3("light1.diffuse", lightDiffuse);
+	shader.setVec3("light1.specular", lightSpecular);
+
+	shader.setVec3("light2.ambient", lightAmbient);
+	shader.setVec3("light2.diffuse", lightDiffuse);
+	shader.setVec3("light2.specular", lightSpecular);
+
+	shader.setVec3("light3.ambient", lightAmbient);
+	shader.setVec3("light3.diffuse", lightDiffuse);
+	shader.setVec3("light3.specular", lightSpecular);
+
+	// camera position
+	shader.setVec3("cameraPosition", camera.Position);
+
+	// material
+	glm::vec3 materialAmbient = glm::vec3(1.0f, 1.0f, 1.0f);
+	glm::vec3 materialDiffuse = glm::vec3(1.0f, 0.5f, 0.31f);
+	glm::vec3 materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
+	float materialShininess = 32.0f;
+
+	shader.setVec3("material.ambient", materialAmbient);
+	shader.setVec3("material.diffuse", materialDiffuse);
+	shader.setVec3("material.specular", materialSpecular);
+	shader.setFloat("material.shininess", materialShininess);
+
+	// gray scale switch
+	shader.setBool("grayScale", grayMode);
 }
 
 void OpenGL::RenderLoop()
 {
 	std::vector<std::string> paths = get_obj_paths(obj_path);
+	std::string chosen_texture = "";
 
-	int size = paths.size();
 	int selectedMesh = 3;
 	int selected = selectedMesh;
 	MeshLoader mesh(paths[selectedMesh]);
@@ -215,52 +249,6 @@ void OpenGL::RenderLoop()
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-		// IMGUI
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-		// shader program
-		shader.use();
-
-		// view matrix and projection matrix
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 1000.0f);
-		view = camera.GetViewMatrix();
-
-		shader.setMat4("projection", projection);
-		shader.setMat4("view", view);
-		shader.setMat4("model", model);
-
-		// light
-		glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-		glm::vec3 lightDirection(camera.Front.x, camera.Front.y, camera.Front.z);
-
-		glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
-		glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
-		glm::vec3 lightSpecular = lightColor * glm::vec3(1.0f);
-
-		shader.setVec3("light.direction", lightDirection);
-		shader.setVec3("light.ambient", lightAmbient);
-		shader.setVec3("light.diffuse", lightDiffuse);
-		shader.setVec3("light.specular", lightSpecular);
-
-		shader.setVec3("cameraPosition", camera.Position);
-
-		// material
-		glm::vec3 materialAmbient = glm::vec3(1.0f, 0.5f, 0.31f);
-		glm::vec3 materialDiffuse = glm::vec3(1.0f, 0.5f, 0.31f);
-		glm::vec3 materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
-		float materialShininess = 32.0f;
-
-		shader.setVec3("material.ambient", materialAmbient);
-		shader.setVec3("material.diffuse", materialDiffuse);
-		shader.setVec3("material.specular", materialSpecular);
-		shader.setFloat("material.shininess", materialShininess);
-
-		// switch
-		shader.setBool("grayScale", grayMode);
-		shader.setBool("mosaic", mosaicMode);
-
 		// Mesh painting
 		if (selectedMesh != selected)
 		{
@@ -273,53 +261,21 @@ void OpenGL::RenderLoop()
 		mesh.paintMesh();
 
 		// IMGUI
-		ImGui::Begin("Settings");
-		ImGui::SetWindowPos(ImVec2(10, 10));
-		ImGui::SetWindowSize(ImVec2(400, 300));
-		ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		ImGui::Checkbox("Wireframe", &wireframe);
-		ImGui::Checkbox("Zoom Mode", &zoomMode);
-		ImGui::Checkbox("Gray Scale", &grayMode);
-		ImGui::Checkbox("Mosaic", &mosaicMode);
-		ImGui::ListBox("Mesh", &selectedMesh, VectorOfStringGetter, &paths, size);
-
-		if (ImGui::Button("Add Texture"))
-		{
-			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*", ".");
-		}
-
-		// display
-		if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-		{
-			// action if OK
-			if (ImGuiFileDialog::Instance()->IsOk())
-			{
-				std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-				std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-				// action
-				std::cout << "File Path: " << filePath << std::endl;
-				std::cout << "File Path Name: " << filePathName << std::endl;
-			}
-
-			// close
-			ImGuiFileDialog::Instance()->Close();
-		}
-
-		ImGui::End();
-
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		gui.startFrame();
+		gui.render();
+		gui.createCheckbox("Wireframe", &wireframe);
+		gui.createCheckbox("Gray Mode", &grayMode);
+		gui.createCheckbox("Zoom Mode", &zoomMode);
+		gui.createCombo("Mesh", paths, &selectedMesh);
+		gui.createExplorer("Texture", texture_path, ".*", &chosen_texture);
+		gui.endFrame();
 
 		// refresh
 		glfwSwapBuffers(window); // swap buffers
 		glfwPollEvents();		 // poll IO events (keys pressed/released, mouse moved etc.)
 	}
 
-	// shut down IMGUI
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
+	gui.cleanUp();
 	shader.del();
 	glfwDestroyWindow(window);
 }

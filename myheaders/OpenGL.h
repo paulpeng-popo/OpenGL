@@ -24,6 +24,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.h"
+#include "GUI.h"
 
 #define deg2rad(x) ((x) * ((3.1415926f) / (180.0f)))
 #define rad2deg(x) ((180.0f) / ((x) * (3.1415926f)))
@@ -54,6 +55,7 @@ private:
 	std::string title;
 	int width;
 	int height;
+	GUI gui;
 
 public:
 	// constructors and destructor
