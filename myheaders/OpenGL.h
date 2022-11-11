@@ -70,6 +70,7 @@ public:
 	void InitDefault();
 	void DumpInfo();
 	void RenderLoop();
+	void shaderPass();
 };
 
 #endif

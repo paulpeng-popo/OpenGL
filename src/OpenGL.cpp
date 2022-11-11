@@ -162,7 +162,7 @@ void OpenGL::DumpInfo()
 	DEBUG("GL_SHADING_LANGUAGE_VERSION: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
 }
 
-void shaderPass()
+void OpenGL::shaderPass()
 {
 	shader.use();
 
